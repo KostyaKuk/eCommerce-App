@@ -1,5 +1,4 @@
-
-  function App() {
+function App() {
   return <div>Ecommerce!</div>;
 }
 
