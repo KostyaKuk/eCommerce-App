@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "test": "jest"
+    "test": "jest",
+    "ci:format": "prettier src --check",
+    "format": "prettier src --write"
   },
   "dependencies": {
     "jest-environment-jsdom": "^29.7.0",
