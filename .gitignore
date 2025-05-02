@@ -4,3 +4,8 @@ logs
 
 # Dependency directories
 node_modules/
+
+# TypeScript build info
+*.tsbuildinfo
+tsconfig.app.tsbuildinfo
+tsconfig.node.tsbuildinfo
