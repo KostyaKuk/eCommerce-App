@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import App from "../App";
+import App from "../Main";
 
 test("demo", () => {
   expect(true).toBe(true);
