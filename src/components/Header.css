@@ -1,0 +1,46 @@
+.header {
+  padding: 10px 20px;
+
+  color: #fff;
+  background-color: #333333;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.header-button {
+  padding: 8px 16px;
+  font-size: 16px;
+
+  color: #fff;
+  background-color: #555555;
+  border: none;
+
+  transition: all .3s ease-in;
+  cursor: pointer;
+}
+
+.header-button:hover {
+  background-color: #777777;
+}
+
+.header-button.active {
+  background-color: #a9cff7;
+  cursor: default;
+}
+
+.header-button:disabled {
+  cursor: auto;
+}
