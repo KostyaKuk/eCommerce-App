@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 
 import "./LoginPage.css";
 
@@ -52,7 +50,7 @@ const LoginPage = () => {
 
   return (
     <div className="page-container">
-      <Header activePage="login" />
+      {/* <Header activePage="login" /> */}
       <div className="form-wrapper">
         <div className="form-container">
           <h2>Login</h2>
@@ -99,7 +97,7 @@ const LoginPage = () => {
           </form>
         </div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

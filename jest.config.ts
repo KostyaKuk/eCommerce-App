@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   preset: "ts-jest",
   testEnvironment: "jest-environment-jsdom",
   transform: {
@@ -10,4 +10,9 @@ export default {
     "\\.(css|less|scss)$": "identity-obj-proxy",
   },
   globals: {},
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
 };
+
+// module.exports = {
+//   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+// };

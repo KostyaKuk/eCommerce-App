@@ -1,4 +1,7 @@
+import { Outlet } from "react-router";
 import "./global.css";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
 
 // Раскомментировать нужное (Запрос на сервер || LOGIN страница || MAIN страница)
 // API TESTING ......
@@ -17,12 +20,14 @@ import "./global.css";
 
 // MAIN PAGE || LOGIN PAGE
 
-import LoginPage from "./pages/LoginPage";
-// import MainPage from "./pages/MainPage";
-
 function App() {
-  return <LoginPage />;
-  // return <MainPage />;
+  return (
+    <>
+      <Header />
+      <Outlet />
+      <Footer />
+    </>
+  );
 }
 
 export default App;

@@ -1,0 +1,26 @@
+.header {
+  padding: 10px 20px;
+  color: #fff;
+  background-color: #333333;
+  height: 60px;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.linkDisabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
