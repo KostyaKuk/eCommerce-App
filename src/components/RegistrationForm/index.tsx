@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -14,15 +14,19 @@ import {
   MenuItem,
   FormHelperText,
   Grid,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { postcodeValidator } from "postcode-validator";
+import { COUNTRIES } from "../../appConstants/countries";
 
-// List of countries for the country selector
-const COUNTRIES = ["United States", "Canada", "United Kingdom", "Germany", "France", "Australia"];
+COUNTRIES.sort((a, b) => a.name.localeCompare(b.name));
+const COUNTRY_NAMES = COUNTRIES.map((country) => country.name);
 
-// Define the form data type first
 interface FormData {
   email: string;
   password: string;
@@ -35,7 +39,6 @@ interface FormData {
   country: string;
 }
 
-// Validation schema using Yup with the same type
 const schema: yup.ObjectSchema<FormData> = yup.object().shape({
   email: yup.string().email("Please enter a valid email").required("Email is required"),
   password: yup
@@ -49,17 +52,23 @@ const schema: yup.ObjectSchema<FormData> = yup.object().shape({
   firstName: yup
     .string()
     .required("First name is required")
-    .matches(/^[a-zA-Z]+$/, "First name must contain only letters"),
+    .matches(/^[a-zA-Zа-яА-Я]+$/, "First name must contain only letters"),
   lastName: yup
     .string()
     .required("Last name is required")
-    .matches(/^[a-zA-Z]+$/, "Last name must contain only letters"),
+    .matches(/^[a-zA-Zа-яА-Я]+$/, "Last name must contain only letters"),
   dateOfBirth: yup
     .mixed<Dayjs>()
     .required("Date of birth is required")
     .test("is-valid-date", "Please enter a valid date", (value) => {
       if (!value) return false;
-      return dayjs(value).isValid();
+      const date = dayjs(value);
+      return date.isValid();
+    })
+    .test("not-future-date", "Date cannot be in the future", (value) => {
+      if (!value) return false;
+      const date = dayjs(value);
+      return date.isBefore(dayjs(), "day") || date.isSame(dayjs(), "day");
     })
     .test("is-old-enough", "You must be at least 13 years old", (value) => {
       if (!value) return false;
@@ -70,20 +79,23 @@ const schema: yup.ObjectSchema<FormData> = yup.object().shape({
     .string()
     .required("City is required")
     .matches(/^[a-zA-Z\s]+$/, "City must contain only letters"),
+  country: yup.string().required("Country is required"),
   postalCode: yup
     .string()
     .required("Postal code is required")
     .test("postal-code-format", "Invalid postal code format", function (value) {
-      const country = this.parent.country;
-      if (country === "United States") {
-        return /^\d{5}(-\d{4})?$/.test(value || "");
+      const countryName = this.parent.country;
+      if (!countryName || !value) return false;
+
+      const country = COUNTRIES.find((c) => c.name === countryName);
+      if (!country) return false;
+
+      try {
+        return postcodeValidator(value, country.code);
+      } catch {
+        return false;
       }
-      if (country === "Canada") {
-        return /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(value || "");
-      }
-      return true;
     }),
-  country: yup.string().required("Country is required"),
 });
 
 const RegistrationForm: React.FC = () => {
@@ -92,6 +104,7 @@ const RegistrationForm: React.FC = () => {
     handleSubmit,
     control,
     watch,
+    trigger,
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(schema),
@@ -107,7 +120,14 @@ const RegistrationForm: React.FC = () => {
       country: "",
     },
     mode: "onBlur",
+    reValidateMode: "onBlur",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const onSubmit = (data: FormData) => {
     console.log("Form submitted:", data);
@@ -169,14 +189,22 @@ const RegistrationForm: React.FC = () => {
       <TextField
         {...register("password")}
         label="Password"
-        type="password"
+        type={showPassword ? "text" : "password"}
         variant="outlined"
         fullWidth
         margin="normal"
         error={!!errors.password}
         helperText={errors.password?.message}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton aria-label="toggle password visibility" onClick={handleClickShowPassword} edge="end">
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
       />
-
       <Controller
         name="dateOfBirth"
         control={control}
@@ -187,7 +215,14 @@ const RegistrationForm: React.FC = () => {
               value={field.value}
               label="Date of Birth"
               format="MM/DD/YYYY"
-              onChange={field.onChange}
+              onChange={(newValue) => {
+                field.onChange(newValue);
+                trigger("dateOfBirth");
+              }}
+              maxDate={dayjs()}
+              onClose={() => {
+                trigger("dateOfBirth");
+              }}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -215,41 +250,20 @@ const RegistrationForm: React.FC = () => {
         helperText={errors.street?.message}
       />
 
-      <Grid container spacing={2}>
-        <Grid size={12}>
-          <TextField
-            {...register("city")}
-            label="City"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            error={!!errors.city}
-            helperText={errors.city?.message}
-          />
-        </Grid>
-        <Grid size={12}>
-          <TextField
-            {...register("postalCode")}
-            label="Postal Code"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            error={!!errors.postalCode}
-            helperText={
-              watchedCountry === "United States"
-                ? "Enter a valid US ZIP code (e.g., 12345 or 12345-6789)"
-                : watchedCountry === "Canada"
-                  ? "Enter a valid Canadian postal code (e.g., A1B 2C3)"
-                  : errors.postalCode?.message
-            }
-          />
-        </Grid>
-      </Grid>
+      <TextField
+        {...register("city")}
+        label="City"
+        variant="outlined"
+        fullWidth
+        margin="normal"
+        error={!!errors.city}
+        helperText={errors.city?.message}
+      />
 
       <FormControl fullWidth margin="normal" error={!!errors.country}>
         <InputLabel id="country-label">Country</InputLabel>
         <Select {...register("country")} labelId="country-label" label="Country" value={watch("country")}>
-          {COUNTRIES.map((country) => (
+          {COUNTRY_NAMES.map((country) => (
             <MenuItem key={country} value={country}>
               {country}
             </MenuItem>
@@ -257,6 +271,16 @@ const RegistrationForm: React.FC = () => {
         </Select>
         {errors.country && <FormHelperText>{errors.country?.message}</FormHelperText>}
       </FormControl>
+
+      <TextField
+        {...register("postalCode")}
+        label="Postal Code"
+        variant="outlined"
+        fullWidth
+        margin="normal"
+        error={!!errors.postalCode}
+        helperText={watchedCountry ? `Enter a valid postal code for ${watchedCountry}` : errors.postalCode?.message}
+      />
 
       <Button type="submit" variant="contained" color="primary" fullWidth size="large" sx={{ mt: 3 }}>
         Register

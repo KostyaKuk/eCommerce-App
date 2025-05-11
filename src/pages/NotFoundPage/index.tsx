@@ -15,7 +15,7 @@ export const NotFoundPage = () => {
         Back
       </Button>
       <DotLottieReact
-        src="https://lottie.host/50ea1969-66f9-4b3e-a100-3dd952de8264/lUVU4waEO8.lottie"
+        src="https://lottie.host/05126975-df0a-47c5-bc3d-188c4290673c/XuusBlyKVG.lottie"
         loop
         autoplay
         style={{ maxWidth: "600px" }}
