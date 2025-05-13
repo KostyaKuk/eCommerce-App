@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { loginUser } from "../utils/api";
 
 import "./LoginPage.css";
 
@@ -37,20 +38,47 @@ const LoginPage = () => {
   useEffect(() => {
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
-    setErrors({ email: emailError, password: passwordError });
+    setErrors((prev) => ({
+      email:
+        prev.email && prev.email !== "Invalid email or password" && prev.email !== "An error occurred. Try again later."
+          ? prev.email
+          : emailError,
+      password:
+        prev.password &&
+        prev.password !== "Invalid email or password" &&
+        prev.password !== "An error occurred. Try again later."
+          ? prev.password
+          : passwordError,
+    }));
     setIsFormValid(!!email && !!password && !emailError && !passwordError);
   }, [email, password]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isFormValid) {
-      console.log("API.........:", { email, password });
+      try {
+        const response = await loginUser(email, password);
+        console.log("Login successful:", response);
+      } catch (error) {
+        console.error("Login failed:", error);
+        const errorMessage = error instanceof Error ? error.message : "An error occurred";
+        if (errorMessage.startsWith("InvalidCredentials")) {
+          setErrors({
+            email: "Invalid email or password",
+            password: "Invalid email or password",
+          });
+        } else {
+          setErrors({
+            email: "An error occurred. Try again later.",
+            password: "An error occurred. Try again later.",
+          });
+        }
+      }
     }
   };
 
   return (
     <div className="page-container">
-      {/* <Header activePage="login" /> */}
       <div className="form-wrapper">
         <div className="form-container">
           <h2>Login</h2>
@@ -61,11 +89,18 @@ const LoginPage = () => {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+                }}
                 className={errors.email ? "input-error" : ""}
                 placeholder="user@example.com"
               />
-              {errors.email && <span className="error-field">{errors.email}</span>}
+              {errors.email && (
+                <span className="error-field api-error">
+                  <span className="error-icon">⚠</span> {errors.email}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -74,11 +109,18 @@ const LoginPage = () => {
                 type={showPassword ? "text" : "password"}
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrors((prev) => ({ ...prev, password: validatePassword(e.target.value) }));
+                }}
                 className={errors.password ? "input-error" : ""}
                 placeholder="Enter your password"
               />
-              {errors.password && <span className="error-field">{errors.password}</span>}
+              {errors.password && (
+                <span className="error-field api-error">
+                  <span className="error-icon">⚠</span> {errors.password}
+                </span>
+              )}
             </div>
 
             <div className="form-group checkbox">
@@ -97,7 +139,6 @@ const LoginPage = () => {
           </form>
         </div>
       </div>
-      {/* <Footer /> */}
     </div>
   );
 };
