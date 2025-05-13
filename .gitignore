@@ -12,3 +12,6 @@ tsconfig.node.tsbuildinfo
 
 # env file
 .env 
+
+# vscode settings
+.vscode
