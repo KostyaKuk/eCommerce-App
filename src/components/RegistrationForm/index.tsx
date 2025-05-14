@@ -27,6 +27,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Delete, Visibility, VisibilityOff } from "@mui/icons-material";
 import { postcodeValidator } from "postcode-validator";
 import { COUNTRIES } from "../../appConstants/countries";
+import { createCustomer } from "../../api/createCustomer";
+import toast, { Toaster } from "react-hot-toast";
 
 COUNTRIES.sort((a, b) => a.name.localeCompare(b.name));
 const COUNTRY_NAMES = COUNTRIES.map((country) => country.name);
@@ -215,7 +217,11 @@ const RegistrationForm: React.FC = () => {
     }
   };
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    const loadingToast = toast.loading("Waiting...", {
+      style: { fontSize: "20px" },
+    });
+
     const addressesArr: {
       key: string;
       country: string;
@@ -260,13 +266,31 @@ const RegistrationForm: React.FC = () => {
       password: data.password,
       firstName: data.firstName,
       lastName: data.lastName,
-      dateOfBirth: data.dateOfBirth,
+      dateOfBirth: data.dateOfBirth.format("YYYY-MM-DD"),
       addresses: addressesArr,
       defaultBillingAddress,
       defaultShippingAddress,
     };
 
-    console.log("Registration data for commercetools:", result);
+    const response = await createCustomer(result);
+
+    if (!response.ok) {
+      const err = await response.json();
+      toast.dismiss(loadingToast);
+      toast.error(err.message, {
+        duration: 5000,
+        style: { fontSize: "20px" },
+      });
+      return;
+    }
+
+    const customer = await response.json();
+    console.log(customer);
+    toast.success("Successfully created!", {
+      duration: 5000,
+      style: { fontSize: "20px" },
+      id: loadingToast,
+    });
   };
 
   const handleRemoveAdress = (idx: number) => {
@@ -282,6 +306,7 @@ const RegistrationForm: React.FC = () => {
       noValidate
       sx={{ maxWidth: 700, mx: "auto", p: 3, boxShadow: 1, borderRadius: 1, background: "#fff" }}
     >
+      <Toaster />
       <Grid container spacing={2}>
         <Grid size={6}>
           <TextField
