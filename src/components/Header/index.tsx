@@ -24,7 +24,7 @@ const Header = () => {
       <div className={styles.headerContent}>
         <h1 className={styles.logo}>Shop</h1>
         <div className={styles.headerButtons}>
-          <NavLink to="/" end className={({ isActive }) => (isActive ? styles.linkDisabled : "")}>
+          <NavLink to="/main" end className={({ isActive }) => (isActive ? styles.linkDisabled : "")}>
             <Button variant="contained">Home</Button>
           </NavLink>
           {!isLoggedIn && (

@@ -2,7 +2,7 @@ import { createApiBuilderFromCtpClient } from "@commercetools/platform-sdk";
 import { ctpClient } from "./BuildClient";
 import { ClientBuilder, createAuthForPasswordFlow, TokenCache, TokenStore } from "@commercetools/sdk-client-v2";
 
-const projectKey = import.meta.env.VITE_COMMERCETOOLS_PROJECT_KEY;
+const projectKey = import.meta.env.VITE_CTP_PROJECT_KEY;
 const apiRoot = createApiBuilderFromCtpClient(ctpClient).withProjectKey({ projectKey });
 
 export const getCategories = async () => {
@@ -31,19 +31,19 @@ export const loginUser = async (email: string, password: string) => {
       .withProjectKey(projectKey)
       .withMiddleware(
         createAuthForPasswordFlow({
-          host: import.meta.env.VITE_COMMERCETOOLS_AUTH_URL,
+          host: import.meta.env.VITE_CTP_AUTH_URL,
           projectKey,
           credentials: {
-            clientId: import.meta.env.VITE_COMMERCETOOLS_CLIENT_ID,
-            clientSecret: import.meta.env.VITE_COMMERCETOOLS_CLIENT_SECRET,
+            clientId: import.meta.env.VITE_CTP_CLIENT_ID,
+            clientSecret: import.meta.env.VITE_CTP_CLIENT_SECRET,
             user: { username: email, password },
           },
-          scopes: [`manage_my_profile:${projectKey}`],
+          scopes: [import.meta.env.VITE_CTP_SCOPES],
           tokenCache,
           fetch,
         })
       )
-      .withHttpMiddleware({ host: import.meta.env.VITE_COMMERCETOOLS_API_URL, fetch })
+      .withHttpMiddleware({ host: import.meta.env.VITE_CTP_API_URL, fetch })
       .withUserAgentMiddleware()
       .build();
 

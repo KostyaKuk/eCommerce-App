@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+import { useCookieManager } from "../hooks/useCookieManager";
 
 import "./LoginPage.css";
 
@@ -13,7 +16,11 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({ email: "", password: "" });
+  const [serverError, setServerError] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
+  const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth();
+  const { setCookie } = useCookieManager();
 
   const validateEmail = (value: string): string => {
     const trimmed = value.trim();
@@ -38,18 +45,7 @@ const LoginPage = () => {
   useEffect(() => {
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
-    setErrors((prev) => ({
-      email:
-        prev.email && prev.email !== "Invalid email or password" && prev.email !== "An error occurred. Try again later."
-          ? prev.email
-          : emailError,
-      password:
-        prev.password &&
-        prev.password !== "Invalid email or password" &&
-        prev.password !== "An error occurred. Try again later."
-          ? prev.password
-          : passwordError,
-    }));
+    setErrors({ email: emailError, password: passwordError });
     setIsFormValid(!!email && !!password && !emailError && !passwordError);
   }, [email, password]);
 
@@ -59,19 +55,19 @@ const LoginPage = () => {
       try {
         const response = await loginUser(email, password);
         console.log("Login successful:", response);
+        setCookie("access_token", response.accessToken || "", { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
+        setCookie("refresh_token", response.refreshToken || "", {
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+        setIsLoggedIn(true);
+        navigate("/main");
       } catch (error) {
         console.error("Login failed:", error);
         const errorMessage = error instanceof Error ? error.message : "An error occurred";
         if (errorMessage.startsWith("InvalidCredentials")) {
-          setErrors({
-            email: "Invalid email or password",
-            password: "Invalid email or password",
-          });
+          setServerError("Invalid email or password");
         } else {
-          setErrors({
-            email: "An error occurred. Try again later.",
-            password: "An error occurred. Try again later.",
-          });
+          setServerError("An error occurred. Try again later.");
         }
       }
     }
@@ -92,6 +88,7 @@ const LoginPage = () => {
                 onChange={(e) => {
                   setEmail(e.target.value);
                   setErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+                  setServerError("");
                 }}
                 className={errors.email ? "input-error" : ""}
                 placeholder="user@example.com"
@@ -112,6 +109,7 @@ const LoginPage = () => {
                 onChange={(e) => {
                   setPassword(e.target.value);
                   setErrors((prev) => ({ ...prev, password: validatePassword(e.target.value) }));
+                  setServerError("");
                 }}
                 className={errors.password ? "input-error" : ""}
                 placeholder="Enter your password"
@@ -122,6 +120,12 @@ const LoginPage = () => {
                 </span>
               )}
             </div>
+
+            {serverError && (
+              <span className="error-field api-error server-error">
+                <span className="error-icon">⚠</span> {serverError}
+              </span>
+            )}
 
             <div className="form-group checkbox">
               <input
