@@ -29,6 +29,10 @@ import { postcodeValidator } from "postcode-validator";
 import { COUNTRIES } from "../../appConstants/countries";
 import { createCustomer } from "../../api/createCustomer";
 import toast, { Toaster } from "react-hot-toast";
+import { loginCustomer } from "../../api/loginCustomer";
+import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
+import { useCookieManager } from "../../hooks/useCookieManager";
 
 COUNTRIES.sort((a, b) => a.name.localeCompare(b.name));
 const COUNTRY_NAMES = COUNTRIES.map((country) => country.name);
@@ -191,7 +195,9 @@ const RegistrationForm: React.FC = () => {
     mode: "onBlur",
     reValidateMode: "onBlur",
   });
-
+  const navigate = useNavigate();
+  const { setCookie } = useCookieManager();
+  const { setIsLoggedIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => {
@@ -285,12 +291,30 @@ const RegistrationForm: React.FC = () => {
     }
 
     const customer = await response.json();
-    console.log(customer);
+    console.log("customer created", customer);
     toast.success("Successfully created!", {
       duration: 5000,
       style: { fontSize: "20px" },
       id: loadingToast,
     });
+
+    const loginResult = await loginCustomer({ email: data.email, password: data.password });
+    if (loginResult.ok) {
+      navigate("/");
+      toast.success(`Hello, ${data.email}`, {
+        duration: 5000,
+        style: { fontSize: "20px" },
+      });
+    }
+    const loginData = await loginResult.json();
+    setIsLoggedIn(true);
+    console.log("customer login", loginData);
+    const expiresDate = new Date(Date.now() + loginData.expires_in * 1000);
+
+    setCookie("access_token", loginData.access_token, { expires: expiresDate });
+    setCookie("refresh_token", loginData.refresh_token);
+    setCookie("scope", loginData.scope);
+    setCookie("token_type", loginData.token_type);
   };
 
   const handleRemoveAdress = (idx: number) => {
