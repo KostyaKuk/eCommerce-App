@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+import { useCookieManager } from "../hooks/useCookieManager";
 
 import "./LoginPage.css";
 
@@ -17,6 +19,8 @@ const LoginPage = () => {
   const [serverError, setServerError] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth();
+  const { setCookie } = useCookieManager();
 
   const validateEmail = (value: string): string => {
     const trimmed = value.trim();
@@ -51,6 +55,11 @@ const LoginPage = () => {
       try {
         const response = await loginUser(email, password);
         console.log("Login successful:", response);
+        setCookie("access_token", response.accessToken || "", { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
+        setCookie("refresh_token", response.refreshToken || "", {
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+        setIsLoggedIn(true);
         navigate("/main");
       } catch (error) {
         console.error("Login failed:", error);
