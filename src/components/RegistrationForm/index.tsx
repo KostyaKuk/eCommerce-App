@@ -29,6 +29,8 @@ import { postcodeValidator } from "postcode-validator";
 import { COUNTRIES } from "../../appConstants/countries";
 import { createCustomer } from "../../api/createCustomer";
 import toast, { Toaster } from "react-hot-toast";
+import { loginCustomer } from "../../api/loginCustomer";
+import { useNavigate } from "react-router";
 
 COUNTRIES.sort((a, b) => a.name.localeCompare(b.name));
 const COUNTRY_NAMES = COUNTRIES.map((country) => country.name);
@@ -191,7 +193,7 @@ const RegistrationForm: React.FC = () => {
     mode: "onBlur",
     reValidateMode: "onBlur",
   });
-
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => {
@@ -285,12 +287,23 @@ const RegistrationForm: React.FC = () => {
     }
 
     const customer = await response.json();
-    console.log(customer);
+    console.log("customer created", customer);
     toast.success("Successfully created!", {
       duration: 5000,
       style: { fontSize: "20px" },
       id: loadingToast,
     });
+
+    const loginResult = await loginCustomer({ email: data.email, password: data.password });
+    if (loginResult.ok) {
+      navigate("/");
+      toast.success(`Hello, ${data.email}`, {
+        duration: 5000,
+        style: { fontSize: "20px" },
+      });
+    }
+    const loginJson = await loginResult.json();
+    console.log("customer login", loginJson);
   };
 
   const handleRemoveAdress = (idx: number) => {
