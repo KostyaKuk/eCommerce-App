@@ -2,6 +2,8 @@ import { Outlet } from "react-router";
 import "./global.css";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
+import { AuthProvider } from "./context/AuthContext";
+import { CookiesProvider } from "react-cookie";
 
 // Раскомментировать нужное (Запрос на сервер || LOGIN страница || MAIN страница)
 // API TESTING ......
@@ -23,9 +25,13 @@ import Header from "./components/Header";
 function App() {
   return (
     <>
-      <Header />
-      <Outlet />
-      <Footer />
+      <CookiesProvider>
+        <AuthProvider>
+          <Header />
+          <Outlet />
+          <Footer />
+        </AuthProvider>
+      </CookiesProvider>
     </>
   );
 }

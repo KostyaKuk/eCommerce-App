@@ -31,6 +31,8 @@ import { createCustomer } from "../../api/createCustomer";
 import toast, { Toaster } from "react-hot-toast";
 import { loginCustomer } from "../../api/loginCustomer";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
+import { useCookieManager } from "../../hooks/useCookieManager";
 
 COUNTRIES.sort((a, b) => a.name.localeCompare(b.name));
 const COUNTRY_NAMES = COUNTRIES.map((country) => country.name);
@@ -194,6 +196,8 @@ const RegistrationForm: React.FC = () => {
     reValidateMode: "onBlur",
   });
   const navigate = useNavigate();
+  const { setCookie } = useCookieManager();
+  const { setIsLoggedIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => {
@@ -302,8 +306,15 @@ const RegistrationForm: React.FC = () => {
         style: { fontSize: "20px" },
       });
     }
-    const loginJson = await loginResult.json();
-    console.log("customer login", loginJson);
+    const loginData = await loginResult.json();
+    setIsLoggedIn(true);
+    console.log("customer login", loginData);
+    const expiresDate = new Date(Date.now() + loginData.expires_in * 1000);
+
+    setCookie("access_token", loginData.access_token, { expires: expiresDate });
+    setCookie("refresh_token", loginData.refresh_token);
+    setCookie("scope", loginData.scope);
+    setCookie("token_type", loginData.token_type);
   };
 
   const handleRemoveAdress = (idx: number) => {
