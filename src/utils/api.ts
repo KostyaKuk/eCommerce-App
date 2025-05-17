@@ -58,12 +58,13 @@ export const loginUser = async (email: string, password: string) => {
       accessToken: tokens?.token,
       refreshToken: tokens?.refreshToken,
     };
-  } catch (error) {
-    console.error("Login error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    if (errorMessage.includes("Customer account with the given credentials not found")) {
-      throw new Error("InvalidCredentials: Неверный email или пароль.");
-    }
-    throw new Error("General: Произошла ошибка. Попробуйте позже.");
+  } catch {
+    // } catch(error) {
+    //   console.error("Login error:", error);
+    //   const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    //   if (errorMessage.includes("Customer account with the given credentials not found")) {
+    //     throw new Error("InvalidCredentials: Неверный email или пароль.");
+    //   }
+    //   throw new Error("General: Произошла ошибка. Попробуйте позже.");
   }
 };

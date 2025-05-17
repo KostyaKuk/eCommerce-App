@@ -1,5 +1,5 @@
 import styles from "./styles.module.css";
-import { NavLink } from "react-router";
+import { NavLink } from "react-router-dom";
 import Button from "@mui/material/Button";
 import { useAuth } from "../../context/AuthContext";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
@@ -22,7 +22,9 @@ const Header = () => {
   return (
     <header className={styles.header}>
       <div className={styles.headerContent}>
-        <h1 className={styles.logo}>Shop</h1>
+        <NavLink to="/main" className={styles.logoLink}>
+          <img src="/assets/logo.png" alt="Shop Logo" className={styles.logo} />
+        </NavLink>
         <div className={styles.headerButtons}>
           <NavLink to="/main" end className={({ isActive }) => (isActive ? styles.linkDisabled : "")}>
             <Button variant="contained">Home</Button>
