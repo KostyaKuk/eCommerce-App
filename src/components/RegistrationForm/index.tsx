@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -197,8 +197,14 @@ const RegistrationForm: React.FC = () => {
   });
   const navigate = useNavigate();
   const { setCookie } = useCookieManager();
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, isLoggedIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/main", { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -300,7 +306,7 @@ const RegistrationForm: React.FC = () => {
 
     const loginResult = await loginCustomer({ email: data.email, password: data.password });
     if (loginResult.ok) {
-      navigate("/");
+      navigate("/main", { replace: true });
       toast.success(`Hello, ${data.email}`, {
         duration: 5000,
         style: { fontSize: "20px" },

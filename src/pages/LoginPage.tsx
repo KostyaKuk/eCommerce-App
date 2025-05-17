@@ -19,8 +19,14 @@ const LoginPage = () => {
   const [serverError, setServerError] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, isLoggedIn } = useAuth();
   const { setCookie } = useCookieManager();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/main", { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
 
   const validateEmail = (value: string): string => {
     const trimmed = value.trim();
