@@ -1,0 +1,156 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+import { useCookieManager } from "../hooks/useCookieManager";
+
+import "./LoginPage.css";
+
+interface ValidationErrors {
+  email: string;
+  password: string;
+}
+
+const LoginPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({ email: "", password: "" });
+  const [serverError, setServerError] = useState("");
+  const [isFormValid, setIsFormValid] = useState(false);
+  const navigate = useNavigate();
+  const { setIsLoggedIn, isLoggedIn } = useAuth();
+  const { setCookie } = useCookieManager();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/main", { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
+
+  const validateEmail = (value: string): string => {
+    const trimmed = value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmed) return "Email is required";
+    if (trimmed !== value) return "Email must not contain leading or trailing whitespace";
+    if (!emailRegex.test(trimmed)) return "Email must be properly formatted (e.g., user@example.com)";
+    return "";
+  };
+
+  const validatePassword = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return "Password is required";
+    if (trimmed !== value) return "Password must not contain leading or trailing whitespace";
+    if (trimmed.length < 8) return "Password must be at least 8 characters long";
+    if (!/[A-Z]/.test(trimmed)) return "Password must contain at least one uppercase letter";
+    if (!/[a-z]/.test(trimmed)) return "Password must contain at least one lowercase letter";
+    if (!/[0-9]/.test(trimmed)) return "Password must contain at least one digit";
+    return "";
+  };
+
+  useEffect(() => {
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    setErrors({ email: emailError, password: passwordError });
+    setIsFormValid(!!email && !!password && !emailError && !passwordError);
+  }, [email, password]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isFormValid) {
+      try {
+        const response = await loginUser(email, password);
+        console.log("Login successful:", response);
+        setCookie("access_token", response.accessToken || "", { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
+        setCookie("refresh_token", response.refreshToken || "", {
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+        setIsLoggedIn(true);
+        navigate("/main");
+      } catch (error) {
+        console.error("Login failed:", error);
+        const errorMessage = error instanceof Error ? error.message : "An error occurred";
+        if (errorMessage.startsWith("InvalidCredentials")) {
+          setServerError("Invalid email or password");
+        } else {
+          setServerError("An error occurred. Try again later.");
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="page-container">
+      <div className="form-wrapper">
+        <div className="form-container">
+          <h2>Login</h2>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+                  setServerError("");
+                }}
+                className={errors.email ? "input-error" : ""}
+                placeholder="user@example.com"
+              />
+              {errors.email && (
+                <span className="error-field api-error">
+                  <span className="error-icon">⚠</span> {errors.email}
+                </span>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrors((prev) => ({ ...prev, password: validatePassword(e.target.value) }));
+                  setServerError("");
+                }}
+                className={errors.password ? "input-error" : ""}
+                placeholder="Enter your password"
+              />
+              {errors.password && (
+                <span className="error-field api-error">
+                  <span className="error-icon">⚠</span> {errors.password}
+                </span>
+              )}
+            </div>
+
+            {serverError && (
+              <span className="error-field api-error server-error">
+                <span className="error-icon">⚠</span> {serverError}
+              </span>
+            )}
+
+            <div className="form-group checkbox">
+              <input
+                type="checkbox"
+                id="showPassword"
+                checked={showPassword}
+                onChange={() => setShowPassword(!showPassword)}
+              />
+              <label htmlFor="showPassword">Show Password</label>
+            </div>
+
+            <button type="submit" disabled={!isFormValid} className={`submit-button ${isFormValid ? "" : "disabled"}`}>
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;

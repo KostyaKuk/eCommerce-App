@@ -9,3 +9,9 @@ node_modules/
 *.tsbuildinfo
 tsconfig.app.tsbuildinfo
 tsconfig.node.tsbuildinfo
+
+# env file
+.env 
+
+# vscode settings
+.vscode
