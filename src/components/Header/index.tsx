@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styles from "./styles.module.css";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router";
 import Button from "@mui/material/Button";
 import { useAuth } from "../../context/AuthContext";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
@@ -13,6 +13,7 @@ const Header = () => {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
   const { removeCookie } = useCookieManager();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -28,6 +29,11 @@ const Header = () => {
   };
 
   const closeMobileMenu = () => setMobileOpen(false);
+
+  const handleProfileClick = () => {
+    if (mobileOpen) closeMobileMenu();
+    navigate("/profile");
+  };
 
   const renderNavLinks = (isMobile = false) => (
     <>
@@ -69,16 +75,11 @@ const Header = () => {
             aria-label="profile"
             color="primary"
             sx={{ display: "block", mx: "auto", mb: 1 }}
-            onClick={isMobile ? closeMobileMenu : undefined}
+            onClick={handleProfileClick}
           >
             <PersonOutlineIcon />
           </IconButton>
-          <IconButton
-            aria-label="logout"
-            color="primary"
-            onClick={isMobile ? handleLogout : undefined}
-            sx={{ display: "block", mx: "auto" }}
-          >
+          <IconButton aria-label="logout" color="primary" onClick={handleLogout} sx={{ display: "block", mx: "auto" }}>
             <LogoutIcon />
           </IconButton>
         </>
