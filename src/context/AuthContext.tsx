@@ -11,7 +11,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { cookies, setCookie, removeCookie } = useCookieManager();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(lslogin);
+
+  function lslogin() {
+    const authLs = localStorage.getItem("auth");
+    return authLs === "true";
+  }
 
   useEffect(() => {
     const initAuth = async () => {
