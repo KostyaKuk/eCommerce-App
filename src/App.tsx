@@ -18,8 +18,6 @@ import Header from "./components/Header";
 //   return <div>Testing API...</div>;
 // }
 
-// MAIN PAGE || LOGIN PAGE
-
 function App() {
   return (
     <>
