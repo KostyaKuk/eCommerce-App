@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { loginUser } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useCookieManager } from "../hooks/useCookieManager";
@@ -29,11 +29,10 @@ const LoginPage = () => {
   }, [isLoggedIn, navigate]);
 
   const validateEmail = (value: string): string => {
-    const trimmed = value.trim();
+    if (!value) return "Email is required";
+    if (value.includes(" ")) return "Email must not contain spaces";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!trimmed) return "Email is required";
-    if (trimmed !== value) return "Email must not contain leading or trailing whitespace";
-    if (!emailRegex.test(trimmed)) return "Email must be properly formatted (e.g., user@example.com)";
+    if (!emailRegex.test(value)) return "Email must be properly formatted (e.g., user@example.com)";
     return "";
   };
 
@@ -60,7 +59,10 @@ const LoginPage = () => {
     if (isFormValid) {
       try {
         const response = await loginUser(email, password);
-        console.log("Login successful:", response);
+        if (!response) {
+          setServerError("Invalid email or password");
+          return;
+        }
         setCookie("access_token", response.accessToken || "", { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
         setCookie("refresh_token", response.refreshToken || "", {
           expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -68,9 +70,12 @@ const LoginPage = () => {
         setIsLoggedIn(true);
         navigate("/main");
       } catch (error) {
-        console.error("Login failed:", error);
         const errorMessage = error instanceof Error ? error.message : "An error occurred";
-        if (errorMessage.startsWith("InvalidCredentials")) {
+        if (
+          errorMessage.includes("invalid_client") ||
+          errorMessage.includes("Customer credentials are invalid") ||
+          errorMessage.includes("InvalidCredentials")
+        ) {
           setServerError("Invalid email or password");
         } else {
           setServerError("An error occurred. Try again later.");
@@ -92,8 +97,12 @@ const LoginPage = () => {
                 id="email"
                 value={email}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  setErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+                  const newValue = e.target.value;
+                  setEmail(newValue);
+                  setErrors((prev) => ({
+                    ...prev,
+                    email: validateEmail(newValue),
+                  }));
                   setServerError("");
                 }}
                 className={errors.email ? "input-error" : ""}
@@ -146,6 +155,11 @@ const LoginPage = () => {
             <button type="submit" disabled={!isFormValid} className={`submit-button ${isFormValid ? "" : "disabled"}`}>
               Login
             </button>
+
+            <div className="register-link">
+              <span>Don't have an account yet? </span>
+              <NavLink to="/register">Sign up now</NavLink>
+            </div>
           </form>
         </div>
       </div>

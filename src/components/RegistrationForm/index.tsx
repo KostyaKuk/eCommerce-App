@@ -67,11 +67,14 @@ interface FormData {
 const addressSchema = yup.object().shape({
   billing: yup.object().shape({
     country: yup.string().required("Country is required"),
-    street: yup.string().required("Street address is required"),
+    street: yup
+      .string()
+      .required("Street address is required")
+      .matches(/^[a-zA-Z0-9\s-]+$/, "Only Latin letters are allowed"),
     city: yup
       .string()
       .required("City is required")
-      .matches(/^[a-zA-Z\s]+$/, "City must contain only letters"),
+      .matches(/^[a-zA-Z\s]+$/, "Only Latin letters are allowed"),
     postalCode: yup
       .string()
       .required("Postal code is required")
@@ -96,12 +99,13 @@ const addressSchema = yup.object().shape({
     }),
     street: yup.string().when("sameAsBilling", {
       is: false,
-      then: (schema) => schema.required("Street address is required"),
+      then: (schema) =>
+        schema.required("Street address is required").matches(/^[a-zA-Z0-9\s-]+$/, "Only Latin letters are allowed"),
       otherwise: (schema) => schema.notRequired(),
     }),
     city: yup.string().when("sameAsBilling", {
       is: false,
-      then: (schema) => schema.required("City is required").matches(/^[a-zA-Z\s]+$/, "City must contain only letters"),
+      then: (schema) => schema.required("City is required").matches(/^[a-zA-Z\s]+$/, "Only Latin letters are allowed"),
       otherwise: (schema) => schema.notRequired(),
     }),
     postalCode: yup.string().when("sameAsBilling", {
@@ -126,7 +130,11 @@ const addressSchema = yup.object().shape({
 });
 
 const schema = yup.object().shape({
-  email: yup.string().email("Please enter a valid email").required("Email is required"),
+  email: yup
+    .string()
+    .email("Please enter a valid email")
+    .required("Email is required")
+    .matches(/^[a-zA-Z0-9@._-]+$/, "Only Latin letters are allowed"),
   password: yup
     .string()
     .required("Password is required")
@@ -138,11 +146,11 @@ const schema = yup.object().shape({
   firstName: yup
     .string()
     .required("First name is required")
-    .matches(/^[a-zA-Zа-яА-Я]+$/, "First name must contain only letters"),
+    .matches(/^[a-zA-Z]+$/, "Only Latin letters are allowed"),
   lastName: yup
     .string()
     .required("Last name is required")
-    .matches(/^[a-zA-Zа-яА-Я]+$/, "Last name must contain only letters"),
+    .matches(/^[a-zA-Z]+$/, "Only Latin letters are allowed"),
   dateOfBirth: yup
     .mixed<Dayjs>()
     .required("Date of birth is required")
