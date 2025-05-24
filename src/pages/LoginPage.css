@@ -97,3 +97,20 @@
 .submit-button:not(.disabled):hover {
   background-color: #013267;
 }
+
+.register-link {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 14px;
+  color: #333333;
+}
+
+.register-link a {
+  color: #4889cd;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
