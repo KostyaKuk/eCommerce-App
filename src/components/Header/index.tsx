@@ -47,6 +47,15 @@ const Header = () => {
           Home
         </Button>
       </NavLink>
+      <NavLink
+        to="/catalog"
+        className={({ isActive }) => (isActive ? styles.linkDisabled : "")}
+        onClick={isMobile ? closeMobileMenu : undefined}
+      >
+        <Button variant="contained" fullWidth sx={{ mb: 1 }}>
+          Catalog
+        </Button>
+      </NavLink>
       {!isLoggedIn ? (
         <>
           <NavLink
@@ -74,7 +83,7 @@ const Header = () => {
           <IconButton
             aria-label="profile"
             color="primary"
-            sx={{ display: "block", mx: "auto", mb: 1 }}
+            sx={{ display: "block", mx: "auto" }}
             onClick={isMobile ? handleProfileClick : handleProfileClick}
           >
             <PersonOutlineIcon />
