@@ -20,6 +20,93 @@
   margin: 0 0 16px;
 }
 
+.filter-group {
+  margin-bottom: 16px;
+}
+
+.filter-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+}
+
+.price-range {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.price-slider {
+  margin: 16px 0;
+}
+
+.price-slider .MuiSlider-rail {
+  background-color: #d0d0d0;
+  height: 6px;
+}
+
+.price-slider .MuiSlider-track {
+  background-color: #4a90e2;
+  height: 6px;
+}
+
+.price-slider .MuiSlider-thumb {
+  background-color: #c15b5b;
+  width: 16px;
+  height: 16px;
+}
+
+.price-slider .MuiSlider-valueLabel {
+  font-size: 0.75rem;
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+.price-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.reset-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #e02424;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reset-button:hover {
+  background-color: #c81c1c;
+}
+
 .catalog-main {
   flex: 1;
   padding: 24px;
@@ -63,7 +150,7 @@
 }
 
 .product-card:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 

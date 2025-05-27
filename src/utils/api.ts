@@ -19,14 +19,14 @@ export const getCategoryByLocalizedName = async (name: string, locale: string) =
   }
 };
 
-export const getProductsByCategory = async (categoryId: string) => {
+export const getProductsByCategory = async (categoryId: string, filters: string[] = []) => {
   try {
     const response = await apiRoot
       .productProjections()
       .search()
       .get({
         queryArgs: {
-          "filter.query": [`categories.id:"${categoryId}"`],
+          "filter.query": [`categories.id:"${categoryId}"`, ...filters],
         },
       })
       .execute();
