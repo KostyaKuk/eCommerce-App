@@ -5,9 +5,31 @@ import { ClientBuilder, createAuthForPasswordFlow, TokenCache, TokenStore } from
 const projectKey = import.meta.env.VITE_CTP_PROJECT_KEY;
 const apiRoot = createApiBuilderFromCtpClient(ctpClient).withProjectKey({ projectKey });
 
-export const getCategories = async () => {
+export const getCategoryByLocalizedName = async (name: string, locale: string) => {
   try {
-    const response = await apiRoot.categories().get().execute();
+    const response = await apiRoot
+      .categories()
+      .get({ queryArgs: { where: `name(${locale}="${name}")` } })
+      .execute();
+
+    return response.body.results[0];
+  } catch (error) {
+    console.error("API error:", error);
+    throw error;
+  }
+};
+
+export const getProductsByCategory = async (categoryId: string, filters: string[] = []) => {
+  try {
+    const response = await apiRoot
+      .productProjections()
+      .search()
+      .get({
+        queryArgs: {
+          "filter.query": [`categories.id:"${categoryId}"`, ...filters],
+        },
+      })
+      .execute();
     return response.body;
   } catch (error) {
     console.error("API error:", error);
@@ -59,12 +81,6 @@ export const loginUser = async (email: string, password: string) => {
       refreshToken: tokens?.refreshToken,
     };
   } catch {
-    // } catch(error) {
-    //   console.error("Login error:", error);
-    //   const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    //   if (errorMessage.includes("Customer account with the given credentials not found")) {
-    //     throw new Error("InvalidCredentials: Неверный email или пароль.");
-    //   }
-    //   throw new Error("General: Произошла ошибка. Попробуйте позже.");
+    throw new Error("General: An error occurred. Please try again later.");
   }
 };
