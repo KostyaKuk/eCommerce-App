@@ -1,3 +1,4 @@
+import { createApiBuilderFromCtpClient } from "@commercetools/platform-sdk";
 import {
   ClientBuilder,
   createAuthForClientCredentialsFlow,
@@ -55,6 +56,11 @@ export const createExistingTokenClient = (token: string) => {
     .withProjectKey(projectKey)
     .withUserAgentMiddleware()
     .build();
+};
+
+export const createCustomerApiRoot = (accessToken: string) => {
+  const client = createExistingTokenClient(accessToken);
+  return createApiBuilderFromCtpClient(client).withProjectKey({ projectKey });
 };
 
 export const ctpClient = new ClientBuilder()
