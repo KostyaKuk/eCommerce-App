@@ -1,10 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { getAccessTokenByRefresh } from "../api/getAccessTokenByRefresh";
 import { useCookieManager } from "../hooks/useCookieManager";
+import { Customer } from "@commercetools/platform-sdk";
 
 interface AuthContextType {
   isLoggedIn: boolean;
+  customer: Customer | null;
   setIsLoggedIn: (value: boolean) => void;
+  setCustomer: (customer: Customer | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -12,6 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { cookies, setCookie, removeCookie } = useCookieManager();
   const [isLoggedIn, setIsLoggedIn] = useState(lslogin);
+  const [customer, setCustomer] = useState<Customer | null>(null);
 
   function lslogin() {
     const authLs = localStorage.getItem("auth");
@@ -28,23 +32,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (accessTokenExists) {
         setIsLoggedIn(true);
-      } else {
-        if (refreshTokenExists) {
-          const result = await getAccessTokenByRefresh(refreshToken);
-          if (result.ok) {
-            const data = await result.json();
-            setCookie("access_token", data.access_token, { expires: data.expiresDate });
-            setCookie("scope", data.scope);
-            setCookie("token_type", data.token_type);
-
-            setIsLoggedIn(true);
-          } else {
-            removeCookie("access_token");
-            removeCookie("refresh_token");
-            removeCookie("scope");
-            removeCookie("token_type");
-            setIsLoggedIn(false);
-          }
+      } else if (refreshTokenExists) {
+        const result = await getAccessTokenByRefresh(refreshToken);
+        if (result.ok) {
+          const data = await result.json();
+          setCookie("access_token", data.access_token, { expires: data.expiresDate });
+          setCookie("scope", data.scope);
+          setCookie("token_type", data.token_type);
+          setIsLoggedIn(true);
+        } else {
+          removeCookie("access_token");
+          removeCookie("refresh_token");
+          removeCookie("scope");
+          removeCookie("token_type");
+          setIsLoggedIn(false);
+          setCustomer(null);
         }
       }
     };
@@ -52,7 +54,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initAuth();
   }, [cookies.access_token, cookies.refresh_token, setCookie, removeCookie]);
 
-  return <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ isLoggedIn, customer, setIsLoggedIn, setCustomer }}>{children}</AuthContext.Provider>
+  );
 };
 
 export const useAuth = (): AuthContextType => {

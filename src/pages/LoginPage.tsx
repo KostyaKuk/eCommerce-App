@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
-import { loginUser } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useCookieManager } from "../hooks/useCookieManager";
-
 import "./LoginPage.css";
+import { loginUser } from "../utils/api";
 
 interface ValidationErrors {
   email: string;
@@ -19,7 +18,7 @@ const LoginPage = () => {
   const [serverError, setServerError] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
-  const { setIsLoggedIn, isLoggedIn } = useAuth();
+  const { setIsLoggedIn, isLoggedIn, setCustomer } = useAuth();
   const { setCookie } = useCookieManager();
 
   useEffect(() => {
@@ -58,16 +57,19 @@ const LoginPage = () => {
     e.preventDefault();
     if (isFormValid) {
       try {
-        const response = await loginUser(email, password);
-        if (!response) {
-          setServerError("Invalid email or password");
-          return;
+        const { customer, accessToken, refreshToken } = await loginUser(email, password);
+        if (!accessToken || !refreshToken) {
+          throw new Error("Authentication failed");
         }
-        setCookie("access_token", response.accessToken || "", { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
-        setCookie("refresh_token", response.refreshToken || "", {
+        setCookie("access_token", accessToken, {
+          expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        });
+        setCookie("refresh_token", refreshToken, {
           expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
         setIsLoggedIn(true);
+        setCustomer(customer);
+
         navigate("/main");
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An error occurred";
