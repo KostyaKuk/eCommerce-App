@@ -37,7 +37,6 @@ const ProductList: React.FC<{ products: Product[]; loading: boolean }> = React.m
         const attrs = product.masterVariant?.attributes || [];
         const description = String(attrs.find((a) => a.name === "description")?.value || "No description");
         const author = String(attrs.find((a) => a.name === "author")?.value || "Unknown Author");
-        const genre = String(attrs.find((a) => a.name === "genre")?.value || "Unknown Genre");
         const image = product.masterVariant?.images?.[0]?.url;
         const price = product.masterVariant?.prices?.[0];
         const originalPrice = price?.value.centAmount ? price.value.centAmount / 100 : null;
@@ -52,7 +51,6 @@ const ProductList: React.FC<{ products: Product[]; loading: boolean }> = React.m
             )}
             <h2 className="product-name">{name}</h2>
             <p className="product-author">By {author}</p>
-            <p className="product-genre">{genre}</p>
             <p className="product-description">{description}</p>
             <p className="product-price">
               {originalPrice !== null ? (
@@ -82,15 +80,14 @@ const Catalog = () => {
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
   const [priceLimits, setPriceLimits] = useState<[number, number]>([0, 0]);
+  const [sortOrder, setSortOrder] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const category = await getCategoryByLocalizedName("Books", "en-GB");
-        if (!category) {
-          console.error("Category 'Books' not found");
-          return;
-        }
+        if (!category) return;
 
         const response = await getProductsByCategory(category.id);
         const results: Product[] = response.results;
@@ -104,7 +101,7 @@ const Catalog = () => {
         results.forEach((product) => {
           const attrs = product.masterVariant?.attributes || [];
           attrs.forEach((attr) => {
-            if (attr.name !== "description" && attr.value) {
+            if (attr.name !== "description" && attr.value && attr.name !== "genre") {
               if (!attrMap[attr.name]) attrMap[attr.name] = new Set();
               attrMap[attr.name].add(String(attr.value));
             }
@@ -143,12 +140,10 @@ const Catalog = () => {
 
     try {
       const category = await getCategoryByLocalizedName("Books", "en-GB");
-      if (!category) {
-        console.error("Category 'Books' not found");
-        return;
-      }
+      if (!category) return;
 
       const filterArgs: string[] = [`categories.id:"${category.id}"`];
+
       Object.entries(selectedFilters).forEach(([attrName, value]) => {
         if (value) {
           filterArgs.push(`variants.attributes.${attrName}:"${value}"`);
@@ -160,8 +155,27 @@ const Catalog = () => {
       const maxCent = Math.round((maxPrice / 0.8) * 100);
       filterArgs.push(`variants.price.centAmount:range(${minCent} to ${maxCent})`);
 
-      const response = await getProductsByCategory(category.id, filterArgs);
-      setProducts(response.results);
+      const sortMap: Record<string, string> = {
+        "price-asc": "price asc",
+        "price-desc": "price desc",
+        "title-asc": "name.en-GB asc",
+        "title-desc": "name.en-GB desc",
+      };
+
+      const sortQuery = sortMap[sortOrder] || undefined;
+
+      const response = await getProductsByCategory(category.id, filterArgs, sortQuery);
+      const results = response.results;
+
+      if (sortOrder === "author-asc" || sortOrder === "author-desc") {
+        results.sort((a, b) => {
+          const aAuthor = (a.masterVariant?.attributes?.find((attr) => attr.name === "author")?.value as string) || "";
+          const bAuthor = (b.masterVariant?.attributes?.find((attr) => attr.name === "author")?.value as string) || "";
+          return sortOrder === "author-asc" ? aAuthor.localeCompare(bAuthor) : bAuthor.localeCompare(aAuthor);
+        });
+      }
+
+      setProducts(results);
     } catch (error) {
       console.error("Error applying filters:", error);
     } finally {
@@ -171,7 +185,7 @@ const Catalog = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [selectedFilters, priceRange]);
+  }, [selectedFilters, priceRange, sortOrder]);
 
   const handleFilterChange = (attrName: string, value: string) => {
     setSelectedFilters((prev) => ({
@@ -187,6 +201,23 @@ const Catalog = () => {
   const resetFilters = () => {
     setSelectedFilters({});
     setPriceRange(priceLimits);
+    setSortOrder("");
+    setSearchQuery("");
+  };
+
+  const filterBySearch = (products: Product[]) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return products;
+
+    return products.filter((product) => {
+      const name = product.name?.["en-GB"]?.toLowerCase() || "";
+      const author =
+        product.masterVariant?.attributes
+          ?.find((attr) => attr.name === "author")
+          ?.value?.toString()
+          .toLowerCase() || "";
+      return name.includes(query) || author.includes(query);
+    });
   };
 
   return (
@@ -204,7 +235,7 @@ const Catalog = () => {
               onChange={(e) => handleFilterChange(attrName, e.target.value)}
               className="filter-select"
             >
-              <option value="">All {attrName.charAt(0).toUpperCase() + attrName.slice(1)}</option>
+              <option value="">All {attrName}</option>
               {values.map((value) => (
                 <option key={value} value={value}>
                   {value}
@@ -214,7 +245,7 @@ const Catalog = () => {
           </div>
         ))}
         <div className="filter-group">
-          <label className="filter-label">Price Range excluding discounts (£)</label>
+          <label className="filter-label">Price Range (£)</label>
           <div className="price-range">
             <Slider
               value={priceRange}
@@ -234,17 +265,38 @@ const Catalog = () => {
         </div>
         {(Object.values(selectedFilters).some((value) => value) ||
           priceRange[0] !== priceLimits[0] ||
-          priceRange[1] !== priceLimits[1]) && (
+          priceRange[1] !== priceLimits[1] ||
+          sortOrder ||
+          searchQuery) && (
           <button onClick={resetFilters} className="reset-button">
             Reset Filters
           </button>
         )}
       </aside>
       <main className="catalog-main">
-        <div className="search-bar">
-          <input type="text" placeholder="Search products..." className="search-input" />
+        <div className="catalog-controls">
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder="Search products..."
+              className="search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="sort-select">
+            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="filter-select">
+              <option value="">Sort by...</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="title-asc">Title: A → Z</option>
+              <option value="title-desc">Title: Z → A</option>
+              <option value="author-asc">Author: A → Z</option>
+              <option value="author-desc">Author: Z → A</option>
+            </select>
+          </div>
         </div>
-        <ProductList products={products} loading={loading} />
+        <ProductList products={filterBySearch(products)} loading={loading} />
       </main>
     </div>
   );
