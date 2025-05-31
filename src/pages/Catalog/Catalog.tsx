@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getProductsByCategory, getCategoryByLocalizedName } from "../../utils/api";
 import Slider from "@mui/material/Slider";
 
@@ -37,6 +38,7 @@ const ProductList: React.FC<{ products: Product[]; loading: boolean }> = React.m
         const attrs = product.masterVariant?.attributes || [];
         const description = String(attrs.find((a) => a.name === "description")?.value || "No description");
         const author = String(attrs.find((a) => a.name === "author")?.value || "Unknown Author");
+        const genre = String(attrs.find((a) => a.name === "genre")?.value || "No genre");
         const image = product.masterVariant?.images?.[0]?.url;
         const price = product.masterVariant?.prices?.[0];
         const originalPrice = price?.value.centAmount ? price.value.centAmount / 100 : null;
@@ -52,6 +54,7 @@ const ProductList: React.FC<{ products: Product[]; loading: boolean }> = React.m
             <h2 className="product-name">{name}</h2>
             <p className="product-author">By {author}</p>
             <p className="product-description">{description}</p>
+            <p className="product-genre">Genre: {genre}</p>
             <p className="product-price">
               {originalPrice !== null ? (
                 discountedPrice !== null ? (
@@ -66,6 +69,9 @@ const ProductList: React.FC<{ products: Product[]; loading: boolean }> = React.m
                 "Price unavailable"
               )}
             </p>
+            <Link to={`/products/`} className="view-details-button">
+              View Details
+            </Link>
           </div>
         );
       })}
@@ -101,7 +107,7 @@ const Catalog = () => {
         results.forEach((product) => {
           const attrs = product.masterVariant?.attributes || [];
           attrs.forEach((attr) => {
-            if (attr.name !== "description" && attr.value && attr.name !== "genre") {
+            if (attr.name !== "description" && attr.value) {
               if (!attrMap[attr.name]) attrMap[attr.name] = new Set();
               attrMap[attr.name].add(String(attr.value));
             }
@@ -245,7 +251,7 @@ const Catalog = () => {
           </div>
         ))}
         <div className="filter-group">
-          <label className="filter-label">Price Range (£)</label>
+          <label className="filter-label">Price Range (£) (Excluding discounts)</label>
           <div className="price-range">
             <Slider
               value={priceRange}
