@@ -1,3 +1,4 @@
+
 .editForm {
     max-width: 600px;
     margin: 0 auto;
@@ -98,7 +99,7 @@
   }
 
   .editButton {
-  width: auto; /* или можно задать фиксированную ширину */
+  width: auto;
   padding: 10px 20px;
   color: #fff;
   background-color: #4889cd;
@@ -130,3 +131,70 @@
   opacity: 0.8;
   transform: none;
 }
+
+.addressesEditContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.addressForm {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  flex: 1;
+  min-width: 300px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 1em;
+}
+
+
+.addButton {
+    padding: 10px 15px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background-color 0.2s;
+  }
+  
+  .addButton:hover:not(:disabled) {
+    background-color: #3e8e41;
+  }
+  
+  .addButton:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+  }
+  
+
+  .removeButton {
+    width: auto;
+  padding: 10px 20px;
+  color: #fff;
+  background-color: #f44336;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  }
+  
+  .removeButton:hover {
+    background-color: #d6817b;
+  }
+  
+  .addressHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }

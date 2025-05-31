@@ -11,7 +11,7 @@ export const getCategoryByLocalizedName = async (name: string, locale: string) =
       .categories()
       .get({ queryArgs: { where: `name(${locale}="${name}")` } })
       .execute();
-
+    console.log("Categories found:", response.body.results);
     return response.body.results[0];
   } catch (error) {
     console.error("API error:", error);
@@ -19,7 +19,7 @@ export const getCategoryByLocalizedName = async (name: string, locale: string) =
   }
 };
 
-export const getProductsByCategory = async (categoryId: string, filters: string[] = []) => {
+export const getProductsByCategory = async (categoryId: string, filters: string[] = [], sort?: string) => {
   try {
     const response = await apiRoot
       .productProjections()
@@ -27,6 +27,7 @@ export const getProductsByCategory = async (categoryId: string, filters: string[
       .get({
         queryArgs: {
           "filter.query": [`categories.id:"${categoryId}"`, ...filters],
+          ...(sort ? { sort } : {}),
         },
       })
       .execute();

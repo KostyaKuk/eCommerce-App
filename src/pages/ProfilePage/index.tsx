@@ -4,6 +4,7 @@ import { useCookieManager } from "../../hooks/useCookieManager";
 import { getCurrentCustomer, getCustomerVersion, updateCustomer } from "../../utils/sdkManage";
 import { Customer, MyCustomerUpdateAction } from "@commercetools/platform-sdk";
 import { EditProfileForm } from "./profileComponents/editProfileForm";
+import { EditAddressForm } from "./profileComponents/editAdresses";
 
 export const useCustomer = () => {
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -42,6 +43,7 @@ export const ProfilePage = () => {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const { cookies } = useCookieManager();
+  const [isEditingAddresses, setIsEditingAddresses] = useState(false);
 
   const handleSave = async (actions: MyCustomerUpdateAction[]) => {
     setIsUpdating(true);
@@ -130,39 +132,57 @@ export const ProfilePage = () => {
 
           {customer.addresses && customer.addresses.length > 0 && (
             <div className={styles.infoCard}>
-              <h2 className={styles.sectionHeader}>Addresses</h2>
-              <div className={styles.addressesContainer}>
-                {customer.addresses.map((address) => (
-                  <div
-                    key={address.id}
-                    className={`${styles.addressCard} ${
-                      address.id === customer.defaultShippingAddressId ||
-                      address.id === customer.defaultBillingAddressId
-                        ? styles.defaultAddress
-                        : ""
-                    }`}
-                  >
-                    <div className={styles.addressHeader}>
-                      <h3 className={styles.addressTitle}>
-                        {address.id === customer.defaultShippingAddressId && "Shipping Address"}
-                        {address.id === customer.defaultBillingAddressId && "Billing Address"}
-                        {address.id !== customer.defaultShippingAddressId &&
-                          address.id !== customer.defaultBillingAddressId &&
-                          "Address"}
-                      </h3>
-                      {(address.id === customer.defaultShippingAddressId ||
-                        address.id === customer.defaultBillingAddressId) && (
-                        <span className={styles.defaultBadge}>Default</span>
-                      )}
-                    </div>
-                    <div className={styles.addressDetails}>
-                      {address.streetName && <p>{address.streetName}</p>}
-                      <p>{[address.city, address.postalCode].filter(Boolean).join(", ")}</p>
-                      {address.country && <p>{address.country}</p>}
-                    </div>
-                  </div>
-                ))}
+              <div className={styles.sectionHeaderContainer}>
+                <h2 className={styles.sectionHeader}>Addresses</h2>
+                <button className={styles.editButton} onClick={() => setIsEditingAddresses(true)} disabled={isUpdating}>
+                  Edit Addresses
+                </button>
               </div>
+
+              {isEditingAddresses ? (
+                <EditAddressForm
+                  customer={customer}
+                  onSave={async (actions) => {
+                    await handleSave(actions);
+                    setIsEditingAddresses(false);
+                  }}
+                  onCancel={() => setIsEditingAddresses(false)}
+                  isUpdating={isUpdating}
+                />
+              ) : (
+                <div className={styles.addressesContainer}>
+                  {customer.addresses.map((address) => (
+                    <div
+                      key={address.id}
+                      className={`${styles.addressCard} ${
+                        address.id === customer.defaultShippingAddressId ||
+                        address.id === customer.defaultBillingAddressId
+                          ? styles.defaultAddress
+                          : ""
+                      }`}
+                    >
+                      <div className={styles.addressHeader}>
+                        <h3 className={styles.addressTitle}>
+                          {address.id === customer.defaultShippingAddressId && "Shipping Address"}
+                          {address.id === customer.defaultBillingAddressId && "Billing Address"}
+                          {address.id !== customer.defaultShippingAddressId &&
+                            address.id !== customer.defaultBillingAddressId &&
+                            "Address"}
+                        </h3>
+                        {(address.id === customer.defaultShippingAddressId ||
+                          address.id === customer.defaultBillingAddressId) && (
+                          <span className={styles.defaultBadge}>Default</span>
+                        )}
+                      </div>
+                      <div className={styles.addressDetails}>
+                        {address.streetName && <p>{address.streetName}</p>}
+                        <p>{[address.city, address.postalCode].filter(Boolean).join(", ")}</p>
+                        {address.country && <p>{address.country}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </>
