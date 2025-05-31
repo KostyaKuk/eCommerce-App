@@ -3,7 +3,6 @@
   margin: 0 auto;
   padding: 2rem;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: bold;
 }
 
 .profileHeader {
@@ -12,16 +11,6 @@
   margin-bottom: 2rem;
   border-bottom: 2px solid #eee;
   padding-bottom: 1rem;
-}
-
-.profileSection {
-  margin-bottom: 3rem;
-}
-
-.sectionTitle {
-  font-size: 1.5rem;
-  color: #444;
-  margin-bottom: 1.5rem;
 }
 
 .sectionHeader {
@@ -55,6 +44,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
+  padding-top: 10px;
 }
 
 .addressCard {
@@ -115,41 +105,111 @@
   color: #d32f2f;
 }
 
-.noAddresses {
-  color: #666;
-  font-style: italic;
+.editButton::before {
+  content: "✏️";
+  font-size: 0.9rem;
 }
 
+.editButton {
+  width: auto;
+  padding: 10px 20px;
+  color: #fff;
+  background-color: #1976d2;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
 
-  
-  .editButton::before {
-    content: "✏️";
-    font-size: 0.9rem;
-  }
+.editButton:hover {
+  background-color: #1565c0;
+  transform: translateY(-1px);
+}
 
-  .editButton {
-    width: auto; 
-    padding: 10px 20px;
-    color: #fff;
-    background-color: #1976d2;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease-in;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .editButton:hover {
-    background-color: #3a7bbd;
-    transform: translateY(-1px);
-  }
-  
-  .editButton:active {
-    background-color: #2d6cad;
-    transform: translateY(0);
-  }
+.editButton:active {
+  background-color: #0d47a1;
+  transform: translateY(0);
+}
+
+.editButton:disabled {
+  background-color: #90caf9;
+  cursor: not-allowed;
+}
+
+.addressesEditContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.addressForm {
+  flex: 1;
+  min-width: 300px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.formRow {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.formGroup input[type="text"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.saveButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #f5f5f5;
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
