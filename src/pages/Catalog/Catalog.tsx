@@ -20,8 +20,9 @@ interface ProductVariant {
   prices?: ProductPrice[];
 }
 
-interface Product {
+export interface Product {
   id: string;
+  key?: string;
   name?: { "en-GB"?: string };
   masterVariant?: ProductVariant;
 }
@@ -68,7 +69,7 @@ const ProductList: React.FC<{ products: Product[]; loading: boolean }> = React.m
                 "Price unavailable"
               )}
             </p>
-            <Link to={`/products/`} className="view-details-button">
+            <Link to={`/products/${product.key}`} className="view-details-button">
               View Details
             </Link>
           </div>

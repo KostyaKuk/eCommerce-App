@@ -123,7 +123,9 @@
   cursor: pointer;
   margin-bottom: 8px;
   text-align: left;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .category-button:hover {
@@ -195,7 +197,9 @@
   flex-direction: column;
   border: 1px solid transparent;
   box-sizing: border-box;
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
 
 .product-card:hover {
@@ -280,7 +284,9 @@
   text-align: center;
   border-radius: 4px;
   font-size: 0.9em;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .view-details-button:hover {

@@ -54,6 +54,17 @@ export const getSubcategories = async (parentId: string) => {
   }
 };
 
+export const getProductByKey = async (key: string) => {
+  try {
+    const response = await apiRoot.products().withKey({ key }).get().execute();
+
+    return response.body;
+  } catch (error) {
+    console.error("Error fetching product by key:", error);
+    throw error;
+  }
+};
+
 export const loginUser = async (email: string, password: string) => {
   try {
     let store: TokenStore | undefined = undefined;
