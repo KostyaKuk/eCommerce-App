@@ -110,6 +110,33 @@
   background-color: #c81c1c;
 }
 
+.category-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2d2d2d;
+  background-color: #f5f6f5;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  text-align: left;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.category-button:hover {
+  background-color: #e5e7eb;
+  border-color: #4a90e2;
+}
+
+.category-button.active {
+  background-color: #4a90e2;
+  color: #ffffff;
+  border-color: #4a90e2;
+}
+
 .catalog-main {
   flex: 1;
   padding: 24px;
@@ -267,6 +294,46 @@
   font-size: 1.125rem;
   color: #4b5563;
   text-align: center;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-item {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #007bff;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.breadcrumb-item:hover {
+  text-decoration: none;
+}
+
+.breadcrumb-item.static {
+  color: #333;
+  cursor: default;
+  text-decoration: none;
+}
+
+.breadcrumb-item.active {
+  color: #333;
+  font-weight: bold;
+  cursor: default;
+  text-decoration: none;
+}
+
+.breadcrumb-separator {
+  color: #666;
 }
 
 @media (max-width: 768px) {

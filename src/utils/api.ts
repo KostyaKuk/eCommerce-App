@@ -37,6 +37,22 @@ export const getProductsByCategory = async (categoryId: string, filters: string[
     throw error;
   }
 };
+export const getSubcategories = async (parentId: string) => {
+  try {
+    const response = await apiRoot
+      .categories()
+      .get({
+        queryArgs: {
+          where: `parent(id="${parentId}")`,
+        },
+      })
+      .execute();
+    return response.body.results;
+  } catch (error) {
+    console.error("API error (subcategories):", error);
+    throw error;
+  }
+};
 
 export const loginUser = async (email: string, password: string) => {
   try {

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getProductsByCategory, getCategoryByLocalizedName } from "../../utils/api";
+import { getProductsByCategory, getCategoryByLocalizedName, getSubcategories } from "../../utils/api";
 import Slider from "@mui/material/Slider";
-
 import "./Catalog.css";
 
 interface ProductAttribute {
@@ -88,12 +87,24 @@ const Catalog = () => {
   const [priceLimits, setPriceLimits] = useState<[number, number]>([0, 0]);
   const [sortOrder, setSortOrder] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [subcategories, setSubcategories] = useState<{ id: string; name: { "en-GB": string } }[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const category = await getCategoryByLocalizedName("Books", "en-GB");
         if (!category) return;
+
+        const subs = await getSubcategories(category.id);
+        setSubcategories(
+          subs
+            .filter((c) => c.name["en-GB"])
+            .map((c) => ({
+              id: c.id,
+              name: { "en-GB": c.name["en-GB"]! },
+            }))
+        );
 
         const response = await getProductsByCategory(category.id);
         const results: Product[] = response.results;
@@ -148,7 +159,13 @@ const Catalog = () => {
       const category = await getCategoryByLocalizedName("Books", "en-GB");
       if (!category) return;
 
-      const filterArgs: string[] = [`categories.id:"${category.id}"`];
+      const filterArgs: string[] = [];
+
+      if (selectedSubcategory) {
+        filterArgs.push(`categories.id:"${selectedSubcategory}"`);
+      } else {
+        filterArgs.push(`categories.id:subtree("${category.id}")`);
+      }
 
       Object.entries(selectedFilters).forEach(([attrName, value]) => {
         if (value) {
@@ -191,17 +208,18 @@ const Catalog = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [selectedFilters, priceRange, sortOrder]);
+  }, [selectedFilters, priceRange, sortOrder, selectedSubcategory]);
 
   const handleFilterChange = (attrName: string, value: string) => {
-    setSelectedFilters((prev) => ({
-      ...prev,
-      [attrName]: value,
-    }));
+    setSelectedFilters((prev) => ({ ...prev, [attrName]: value }));
   };
 
   const handlePriceChange = (_: Event, newValue: number | number[]) => {
     setPriceRange(newValue as [number, number]);
+  };
+
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedSubcategory(categoryId);
   };
 
   const resetFilters = () => {
@@ -209,6 +227,7 @@ const Catalog = () => {
     setPriceRange(priceLimits);
     setSortOrder("");
     setSearchQuery("");
+    setSelectedSubcategory("");
   };
 
   const filterBySearch = (products: Product[]) => {
@@ -230,6 +249,24 @@ const Catalog = () => {
     <div className="catalog-container">
       <aside className="sidebar">
         <h2 className="sidebar-title">Filters</h2>
+        <div className="filter-group">
+          <label className="filter-label">Subcategory</label>
+          <button
+            className={`category-button ${selectedSubcategory === "" ? "active" : ""}`}
+            onClick={() => handleCategorySelect("")}
+          >
+            All Subcategories
+          </button>
+          {subcategories.map((subcat) => (
+            <button
+              key={subcat.id}
+              className={`category-button ${selectedSubcategory === subcat.id ? "active" : ""}`}
+              onClick={() => handleCategorySelect(subcat.id)}
+            >
+              {subcat.name["en-GB"]}
+            </button>
+          ))}
+        </div>
         {Object.entries(attributes).map(([attrName, values]) => (
           <div key={attrName} className="filter-group">
             <label htmlFor={`${attrName}-filter`} className="filter-label">
@@ -252,55 +289,65 @@ const Catalog = () => {
         ))}
         <div className="filter-group">
           <label className="filter-label">Price Range (£) (Excluding discounts)</label>
-          <div className="price-range">
-            <Slider
-              value={priceRange}
-              onChange={handlePriceChange}
-              valueLabelDisplay="auto"
-              valueLabelFormat={(value) => `£${value}`}
-              min={priceLimits[0]}
-              max={priceLimits[1]}
-              step={1}
-              className="price-slider"
-            />
-            <div className="price-values">
-              <span>£{priceRange[0]}</span>
-              <span>£{priceRange[1]}</span>
-            </div>
+          <Slider
+            value={priceRange}
+            onChange={handlePriceChange}
+            valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `£${value}`}
+            min={priceLimits[0]}
+            max={priceLimits[1]}
+            step={1}
+            className="price-slider"
+          />
+          <div className="price-values">
+            <span>£{priceRange[0]}</span>
+            <span>£{priceRange[1]}</span>
           </div>
         </div>
-        {(Object.values(selectedFilters).some((value) => value) ||
+        {(Object.values(selectedFilters).some(Boolean) ||
           priceRange[0] !== priceLimits[0] ||
           priceRange[1] !== priceLimits[1] ||
           sortOrder ||
-          searchQuery) && (
+          searchQuery ||
+          selectedSubcategory) && (
           <button onClick={resetFilters} className="reset-button">
             Reset Filters
           </button>
         )}
       </aside>
       <main className="catalog-main">
+        <div className="breadcrumb">
+          <span className="breadcrumb-item static">Catalog</span>
+          <span className="breadcrumb-separator">/</span>
+          <button className="breadcrumb-item" onClick={() => handleCategorySelect("")}>
+            Books
+          </button>
+          {selectedSubcategory && (
+            <>
+              <span className="breadcrumb-separator">/</span>
+              <span className="breadcrumb-item active">
+                {subcategories.find((s) => s.id === selectedSubcategory)?.name["en-GB"]}
+              </span>
+            </>
+          )}
+        </div>
         <div className="catalog-controls">
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="search-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="sort-select">
-            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="filter-select">
-              <option value="">Sort by...</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="title-asc">Title: A → Z</option>
-              <option value="title-desc">Title: Z → A</option>
-              <option value="author-asc">Author: A → Z</option>
-              <option value="author-desc">Author: Z → A</option>
-            </select>
-          </div>
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="filter-select">
+            <option value="">Sort by...</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="title-asc">Title: A → Z</option>
+            <option value="title-desc">Title: Z → A</option>
+            <option value="author-asc">Author: A → Z</option>
+            <option value="author-desc">Author: Z → A</option>
+          </select>
         </div>
         <ProductList products={filterBySearch(products)} loading={loading} />
       </main>
