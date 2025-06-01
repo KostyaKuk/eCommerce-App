@@ -3,6 +3,7 @@ import App from "../App";
 import LoginPage from "../pages/LoginPage";
 import MainPage from "../pages/MainPage";
 import Catalog from "../pages/Catalog/Catalog";
+import ProductPage from "../pages/ProductPage/ProductPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ProfilePage } from "../pages/ProfilePage";
@@ -17,6 +18,7 @@ export const Router = () => {
         <Route path="main" element={<MainPage />} />
 
         <Route path="catalog" element={<Catalog />} />
+        <Route path="products/:key" element={<ProductPage />} />
 
         <Route element={<PublicRoute redirectTo="/" />}>
           <Route path="/login" element={<LoginPage />} />
