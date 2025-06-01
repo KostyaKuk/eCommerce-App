@@ -20,7 +20,7 @@ interface ProductVariant {
   prices?: ProductPrice[];
 }
 
-export interface Product {
+interface Product {
   id: string;
   key?: string;
   name?: { "en-GB"?: string };
