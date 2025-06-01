@@ -1,6 +1,11 @@
-import styles from "./Profile.module.css";
 import { useState } from "react";
+import toast from "react-hot-toast";
+import styles from "./Profile.module.css";
 import { Customer, MyCustomerUpdateAction } from "@commercetools/platform-sdk";
+import { postcodeValidator } from "postcode-validator";
+import { COUNTRIES } from "../../../appConstants/countries";
+import { useCookieManager } from "../../../hooks/useCookieManager";
+import { getCurrentCustomer } from "../../../utils/sdkManage";
 
 interface EditAddressFormProps {
   customer: Customer;
@@ -19,24 +24,70 @@ interface Address {
   isDefaultBilling: boolean;
 }
 
+interface AddressErrors {
+  [index: number]: {
+    streetName?: string;
+    city?: string;
+    country?: string;
+    postalCode?: string;
+  };
+}
+
 export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false }: EditAddressFormProps) => {
   const [addresses, setAddresses] = useState<Address[]>(
     customer.addresses?.map((addr) => ({
       id: addr.id,
       streetName: addr.streetName || "",
       city: addr.city || "",
-      country: addr.country || "",
+      country: COUNTRIES.find((c) => c.name === addr.country)?.code || addr.country || "",
       postalCode: addr.postalCode || "",
       isDefaultShipping: customer.defaultShippingAddressId === addr.id,
       isDefaultBilling: customer.defaultBillingAddressId === addr.id,
     })) || []
   );
+  const [errors, setErrors] = useState<AddressErrors>({});
+  const { cookies } = useCookieManager();
+
+  const validateAddress = (address: Address): AddressErrors[number] | null => {
+    const newErrors: AddressErrors[number] = {};
+
+    if (!address.streetName) {
+      newErrors.streetName = "Street address is required";
+    } else if (!/^[a-zA-Z0-9\s-]+$/.test(address.streetName)) {
+      newErrors.streetName = "Only Latin letters, numbers, spaces, and hyphens are allowed";
+    }
+
+    if (!address.city) {
+      newErrors.city = "City is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(address.city)) {
+      newErrors.city = "Only Latin letters and spaces are allowed";
+    }
+
+    if (!address.country) {
+      newErrors.country = "Country is required";
+    } else if (!COUNTRIES.some((c) => c.code === address.country)) {
+      newErrors.country = "Please select a valid country";
+    }
+
+    if (!address.postalCode) {
+      newErrors.postalCode = "Postal code is required";
+    } else if (!postcodeValidator(address.postalCode, address.country)) {
+      newErrors.postalCode = "Invalid postal code format";
+    }
+
+    return Object.keys(newErrors).length > 0 ? newErrors : null;
+  };
 
   const handleAddressChange = (index: number, field: string, value: string | boolean) => {
     setAddresses((prev) => {
       const newAddresses = [...prev];
       newAddresses[index] = { ...newAddresses[index], [field]: value };
       return newAddresses;
+    });
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[index]?.[field as keyof AddressErrors[number]];
+      return newErrors;
     });
   };
 
@@ -56,34 +107,43 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
 
   const handleRemoveAddress = (index: number) => {
     setAddresses((prev) => prev.filter((_, i) => i !== index));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[index];
+      return newErrors;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors: AddressErrors = {};
+    let isValid = true;
+    addresses.forEach((address, index) => {
+      const addressErrors = validateAddress(address);
+      if (addressErrors) {
+        newErrors[index] = addressErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(newErrors);
+    if (!isValid) {
+      toast.error("Please fix the errors in the address fields.");
+      return;
+    }
 
     const actions: MyCustomerUpdateAction[] = [];
 
     customer.addresses?.forEach((originalAddress) => {
       if (!addresses.some((addr) => addr.id === originalAddress.id)) {
         if (customer.defaultShippingAddressId === originalAddress.id) {
-          actions.push({
-            action: "setDefaultShippingAddress",
-          });
+          actions.push({ action: "setDefaultShippingAddress" });
         }
         if (customer.defaultBillingAddressId === originalAddress.id) {
-          actions.push({
-            action: "setDefaultBillingAddress",
-          });
+          actions.push({ action: "setDefaultBillingAddress" });
         }
-      }
-    });
-
-    customer.addresses?.forEach((originalAddress) => {
-      if (!addresses.some((addr) => addr.id === originalAddress.id)) {
-        actions.push({
-          action: "removeAddress",
-          addressId: originalAddress.id,
-        });
+        actions.push({ action: "removeAddress", addressId: originalAddress.id });
       }
     });
 
@@ -110,35 +170,44 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
           },
         });
       }
-
-      if (address.isDefaultShipping && customer.defaultShippingAddressId !== address.id) {
-        actions.push({
-          action: "setDefaultShippingAddress",
-          addressId: address.id,
-        });
-      } else if (!address.isDefaultShipping && customer.defaultShippingAddressId === address.id) {
-        actions.push({
-          action: "setDefaultShippingAddress",
-        });
-      }
-
-      if (address.isDefaultBilling && customer.defaultBillingAddressId !== address.id) {
-        actions.push({
-          action: "setDefaultBillingAddress",
-          addressId: address.id,
-        });
-      } else if (!address.isDefaultBilling && customer.defaultBillingAddressId === address.id) {
-        actions.push({
-          action: "setDefaultBillingAddress",
-        });
-      }
     });
 
     try {
       await onSave(actions);
+      const updatedCustomer = await getCurrentCustomer(cookies.access_token);
+      const newActions: MyCustomerUpdateAction[] = [];
+      addresses.forEach((address) => {
+        const addressId =
+          address.id ||
+          updatedCustomer.addresses.find(
+            (a) =>
+              a.streetName === address.streetName &&
+              a.city === address.city &&
+              a.country === address.country &&
+              a.postalCode === address.postalCode
+          )?.id;
+
+        if (addressId && address.isDefaultShipping && updatedCustomer.defaultShippingAddressId !== addressId) {
+          newActions.push({ action: "setDefaultShippingAddress", addressId });
+        } else if (addressId && !address.isDefaultShipping && updatedCustomer.defaultShippingAddressId === addressId) {
+          newActions.push({ action: "setDefaultShippingAddress" });
+        }
+
+        if (addressId && address.isDefaultBilling && updatedCustomer.defaultBillingAddressId !== addressId) {
+          newActions.push({ action: "setDefaultBillingAddress", addressId });
+        } else if (addressId && !address.isDefaultBilling && updatedCustomer.defaultBillingAddressId === addressId) {
+          newActions.push({ action: "setDefaultBillingAddress" });
+        }
+      });
+
+      if (newActions.length > 0) {
+        await onSave(newActions);
+      }
+
+      toast.success("Addresses updated successfully!");
     } catch (error) {
-      console.error("Failed to update addresses:", error);
-      alert("Failed to update addresses. Please try again.");
+      console.error("Error updating addresses:", error);
+      toast.error("Failed to update addresses. Please try again.");
     }
   };
 
@@ -172,6 +241,7 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
                 disabled={isUpdating}
                 required
               />
+              {errors[index]?.streetName && <span className={styles.error}>{errors[index].streetName}</span>}
             </div>
 
             <div className={styles.formRow}>
@@ -184,6 +254,7 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
                   disabled={isUpdating}
                   required
                 />
+                {errors[index]?.city && <span className={styles.error}>{errors[index].city}</span>}
               </div>
               <div className={styles.formGroup}>
                 <label>Postal Code</label>
@@ -194,18 +265,26 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
                   disabled={isUpdating}
                   required
                 />
+                {errors[index]?.postalCode && <span className={styles.error}>{errors[index].postalCode}</span>}
               </div>
             </div>
 
             <div className={styles.formGroup}>
               <label>Country</label>
-              <input
-                type="text"
+              <select
                 value={address.country}
                 onChange={(e) => handleAddressChange(index, "country", e.target.value)}
                 disabled={isUpdating}
                 required
-              />
+              >
+                <option value="">Select a country</option>
+                {COUNTRIES.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+              {errors[index]?.country && <span className={styles.error}>{errors[index].country}</span>}
             </div>
 
             <div className={styles.formRow}>
@@ -217,7 +296,7 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
                     onChange={(e) => handleAddressChange(index, "isDefaultShipping", e.target.checked)}
                     disabled={isUpdating}
                   />
-                  Default Shipping Address
+                  Default Shipping
                 </label>
               </div>
               <div className={styles.formGroup}>
@@ -228,7 +307,7 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
                     onChange={(e) => handleAddressChange(index, "isDefaultBilling", e.target.checked)}
                     disabled={isUpdating}
                   />
-                  Default Billing Address
+                  Default Billing
                 </label>
               </div>
             </div>

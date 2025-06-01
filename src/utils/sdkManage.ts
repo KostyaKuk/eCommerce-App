@@ -51,3 +51,25 @@ export const updateCustomer = async (
     return error instanceof Error ? error.message : "Failed to update customer";
   }
 };
+
+export const updatePassword = async (
+  accessToken: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ email: string; error: string }> => {
+  const output = {
+    email: "",
+    error: "",
+  };
+
+  try {
+    const version = await getCustomerVersion(accessToken);
+    const apiRoot = createCustomerApiRoot(accessToken);
+    const response = await apiRoot.me().password().post({ body: { version, currentPassword, newPassword } }).execute();
+    output.email = response.body.email;
+  } catch (err) {
+    console.error("Error updating password:", err);
+  }
+
+  return output;
+};
