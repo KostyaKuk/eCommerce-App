@@ -67,7 +67,7 @@ export const ChangePasswordForm = ({ onCancel, onSuccess, isUpdating = false }: 
       <div className={styles.formSection}>
         <h2 className={styles.sectionHeader}>Change Password</h2>
         <div className={styles.formGroup}>
-          <label>Current Password</label>
+          <label className={styles.formLabel}>Current Password</label>
           <input
             type="password"
             name="currentPassword"
@@ -75,11 +75,12 @@ export const ChangePasswordForm = ({ onCancel, onSuccess, isUpdating = false }: 
             onChange={handleInputChange}
             required
             disabled={isUpdating}
+            className={styles.formInput}
           />
           {errors.password && <span className={styles.error}>{errors.password}</span>}
         </div>
         <div className={styles.formGroup}>
-          <label>New Password</label>
+          <label className={styles.formLabel}>New Password</label>
           <input
             type="password"
             name="newPassword"
@@ -87,10 +88,11 @@ export const ChangePasswordForm = ({ onCancel, onSuccess, isUpdating = false }: 
             onChange={handleInputChange}
             required
             disabled={isUpdating}
+            className={styles.formInput}
           />
         </div>
         <div className={styles.formGroup}>
-          <label>Confirm New Password</label>
+          <label className={styles.formLabel}>Confirm New Password</label>
           <input
             type="password"
             name="confirmPassword"
@@ -98,6 +100,7 @@ export const ChangePasswordForm = ({ onCancel, onSuccess, isUpdating = false }: 
             onChange={handleInputChange}
             required
             disabled={isUpdating}
+            className={styles.formInput}
           />
         </div>
       </div>
