@@ -35,10 +35,12 @@
     "react-hot-toast": "^2.5.2",
     "react-router": "^7.5.3",
     "react-router-dom": "^7.5.3",
+    "swiper": "^11.2.8",
     "yup": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
+    "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^29.5.14",
