@@ -173,7 +173,10 @@
   font-size: 1rem;
   color: #333;
   background-color: #fff;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
   line-height: 1.5;
   appearance: none;
 }
@@ -211,7 +214,9 @@
   border: 1px solid #d1d5db;
   border-radius: 4px;
   cursor: pointer;
-  transition: border-color 0.3s ease, background-color 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease;
 }
 
 .checkboxInput:checked {
