@@ -93,7 +93,7 @@ export const EditProfileForm = ({ customer, onSave, onCancel, isUpdating = false
       <div className={styles.formSection}>
         <h2 className={styles.sectionHeader}>Personal Information</h2>
         <div className={styles.formGroup}>
-          <label>First Name</label>
+          <label className={styles.formLabel}>First Name</label>
           <input
             type="text"
             name="firstName"
@@ -101,11 +101,12 @@ export const EditProfileForm = ({ customer, onSave, onCancel, isUpdating = false
             onChange={handleInputChange}
             required
             disabled={isUpdating}
+            className={styles.formInput}
           />
           {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
         </div>
         <div className={styles.formGroup}>
-          <label>Last Name</label>
+          <label className={styles.formLabel}>Last Name</label>
           <input
             type="text"
             name="lastName"
@@ -113,11 +114,12 @@ export const EditProfileForm = ({ customer, onSave, onCancel, isUpdating = false
             onChange={handleInputChange}
             required
             disabled={isUpdating}
+            className={styles.formInput}
           />
           {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
         </div>
         <div className={styles.formGroup}>
-          <label>Email</label>
+          <label className={styles.formLabel}>Email</label>
           <input
             type="email"
             name="email"
@@ -125,17 +127,19 @@ export const EditProfileForm = ({ customer, onSave, onCancel, isUpdating = false
             onChange={handleInputChange}
             required
             disabled={isUpdating}
+            className={styles.formInput}
           />
           {errors.email && <span className={styles.error}>{errors.email}</span>}
         </div>
         <div className={styles.formGroup}>
-          <label>Date of Birth</label>
+          <label className={styles.formLabel}>Date of Birth</label>
           <input
             type="date"
             name="dateOfBirth"
             value={formData.dateOfBirth}
             onChange={handleInputChange}
             disabled={isUpdating}
+            className={styles.formInput}
           />
           {errors.dateOfBirth && <span className={styles.error}>{errors.dateOfBirth}</span>}
         </div>

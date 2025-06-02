@@ -149,7 +149,7 @@ export const ProfilePage = () => {
         }}
       />
       <h1 className={styles.profileHeader}>
-        Welcome, {customer.firstName} {customer.lastName}
+        Welcome, {customer.firstName} {customer.lastName} !
       </h1>
 
       {updateError && <div className={styles.error}>{updateError}</div>}

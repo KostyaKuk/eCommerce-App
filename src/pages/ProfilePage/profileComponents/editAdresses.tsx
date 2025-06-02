@@ -233,49 +233,53 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
             </div>
 
             <div className={styles.formGroup}>
-              <label>Street</label>
+              <label className={styles.formLabel}>Street</label>
               <input
                 type="text"
                 value={address.streetName}
                 onChange={(e) => handleAddressChange(index, "streetName", e.target.value)}
                 disabled={isUpdating}
                 required
+                className={styles.formInput}
               />
               {errors[index]?.streetName && <span className={styles.error}>{errors[index].streetName}</span>}
             </div>
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>City</label>
+                <label className={styles.formLabel}>City</label>
                 <input
                   type="text"
                   value={address.city}
                   onChange={(e) => handleAddressChange(index, "city", e.target.value)}
                   disabled={isUpdating}
                   required
+                  className={styles.formInput}
                 />
                 {errors[index]?.city && <span className={styles.error}>{errors[index].city}</span>}
               </div>
               <div className={styles.formGroup}>
-                <label>Postal Code</label>
+                <label className={styles.formLabel}>Postal Code</label>
                 <input
                   type="text"
                   value={address.postalCode}
                   onChange={(e) => handleAddressChange(index, "postalCode", e.target.value)}
                   disabled={isUpdating}
                   required
+                  className={styles.formInput}
                 />
                 {errors[index]?.postalCode && <span className={styles.error}>{errors[index].postalCode}</span>}
               </div>
             </div>
 
             <div className={styles.formGroup}>
-              <label>Country</label>
+              <label className={styles.formLabel}>Country</label>
               <select
                 value={address.country}
                 onChange={(e) => handleAddressChange(index, "country", e.target.value)}
                 disabled={isUpdating}
                 required
+                className={styles.formInput}
               >
                 <option value="">Select a country</option>
                 {COUNTRIES.map((country) => (
@@ -289,23 +293,25 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>
+                <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
                     checked={address.isDefaultShipping}
                     onChange={(e) => handleAddressChange(index, "isDefaultShipping", e.target.checked)}
                     disabled={isUpdating}
+                    className={styles.checkboxInput}
                   />
                   Default Shipping
                 </label>
               </div>
               <div className={styles.formGroup}>
-                <label>
+                <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
                     checked={address.isDefaultBilling}
                     onChange={(e) => handleAddressChange(index, "isDefaultBilling", e.target.checked)}
                     disabled={isUpdating}
+                    className={styles.checkboxInput}
                   />
                   Default Billing
                 </label>
@@ -330,4 +336,3 @@ export const EditAddressForm = ({ customer, onSave, onCancel, isUpdating = false
     </form>
   );
 };
-
