@@ -116,4 +116,3 @@ export const ChangePasswordForm = ({ onCancel, onSuccess, isUpdating = false }: 
     </form>
   );
 };
-

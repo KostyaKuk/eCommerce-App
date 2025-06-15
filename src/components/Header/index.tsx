@@ -56,6 +56,15 @@ const Header = () => {
           Catalog
         </Button>
       </NavLink>
+      <NavLink
+        to="/about-us"
+        className={({ isActive }) => (isActive ? styles.linkDisabled : "")}
+        onClick={isMobile ? closeMobileMenu : undefined}
+      >
+        <Button variant="contained" fullWidth sx={{ mb: 1 }}>
+          About Us
+        </Button>
+      </NavLink>
       {!isLoggedIn ? (
         <>
           <NavLink
