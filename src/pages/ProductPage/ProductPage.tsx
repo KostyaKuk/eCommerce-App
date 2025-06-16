@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProductByKey } from "../../utils/api";
+import { getProductByKey, addProductToCart, changeLineItemQuantity, createAnonymousCart } from "../../utils/api";
 import { Product } from "@commercetools/platform-sdk";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
@@ -9,14 +9,22 @@ import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
 import "./ProductPage.css";
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import { Button, CircularProgress, IconButton, Box, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 
 const ProductPage: React.FC = () => {
   const { key } = useParams<{ key: string }>();
+  const { cart, setCart } = useCart();
+  const { isLoggedIn } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const mainSwiperRef = useRef<SwiperType | null>(null);
   const lightboxSwiperRef = useRef<SwiperType | null>(null);
 
@@ -43,6 +51,48 @@ const ProductPage: React.FC = () => {
     fetchProduct();
   }, [key]);
 
+  const getProductQuantity = (productId: string, variantId: number) => {
+    const lineItem = cart?.lineItems.find((item) => item.productId === productId && item.variant.id === variantId);
+    return { quantity: lineItem ? lineItem.quantity : 0, lineItemId: lineItem?.id };
+  };
+
+  const handleAddToCart = async (productId: string, variantId: number, action: "add" | "increment" | "decrement") => {
+    setIsAdding(true);
+    try {
+      let currentCart = cart;
+      if (!currentCart && !isLoggedIn) {
+        console.log("ProductPage: No cart exists, creating anonymous cart...");
+        const newCart = await createAnonymousCart();
+        localStorage.setItem("anonymousCartId", newCart.id);
+        setCart(newCart);
+        currentCart = newCart;
+      } else if (!currentCart) {
+        console.log("ProductPage: No cart for logged-in user, cannot proceed");
+        return;
+      }
+
+      console.log(`ProductPage: Performing ${action} for product: ${productId}, variant: ${variantId}`);
+      let updatedCart;
+      if (action === "add" || action === "increment") {
+        updatedCart = await addProductToCart(currentCart.id, productId, variantId, 1);
+      } else if (action === "decrement") {
+        const { lineItemId, quantity: currentQuantity } = getProductQuantity(productId, variantId);
+        if (lineItemId && currentQuantity > 0) {
+          const newQuantity = currentQuantity - 1;
+          updatedCart = await changeLineItemQuantity(currentCart.id, lineItemId, newQuantity);
+        }
+      }
+      if (updatedCart) {
+        setCart(updatedCart);
+        console.log("ProductPage: Updated cart:", updatedCart);
+      }
+    } catch (err) {
+      console.error(`ProductPage: Error performing ${action}:`, err);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!product) return null;
@@ -59,6 +109,9 @@ const ProductPage: React.FC = () => {
   const originalPrice = price?.value.centAmount ? price.value.centAmount / 100 : null;
   const discountedPrice = price?.discounted?.value.centAmount ? price.discounted.value.centAmount / 100 : null;
   const sku = product.masterData.current.masterVariant.sku || "No SKU";
+  const variantId = product.masterData.current.masterVariant.id || 1;
+
+  const { quantity, lineItemId } = getProductQuantity(product.id, variantId);
 
   const handleThumbnailClick = (imgUrl: string, index: number) => {
     setSelectedImage(imgUrl);
@@ -147,6 +200,95 @@ const ProductPage: React.FC = () => {
               "Price unavailable"
             )}
           </p>
+          {quantity === 0 ? (
+            <Button
+              variant="contained"
+              onClick={() => handleAddToCart(product.id, variantId, "add")}
+              disabled={isAdding}
+              startIcon={isAdding ? <CircularProgress size={20} /> : null}
+              sx={{
+                width: "50%",
+                padding: "10px",
+                fontWeight: 600,
+                color: "#ffffff",
+                backgroundColor: "#4a90e2",
+                borderRadius: "6px",
+                "&:hover": {
+                  backgroundColor: "#357abd",
+                },
+                "&:disabled": {
+                  backgroundColor: "#d0d0d0",
+                  color: "#6b7280",
+                },
+              }}
+            >
+              Add to Cart
+            </Button>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "left",
+                gap: "16px",
+                mt: "8px",
+              }}
+            >
+              <IconButton
+                onClick={() => handleAddToCart(product.id, variantId, "decrement")}
+                disabled={isAdding || !lineItemId}
+                sx={{
+                  backgroundColor: "#f5f6f5",
+                  border: "1px solid #d0d0d0",
+                  borderRadius: "4px",
+                  color: "#2d2d2d",
+                  "&:hover": {
+                    backgroundColor: "#e5e7eb",
+                    borderColor: "#4a90e2",
+                  },
+                  "&:disabled": {
+                    backgroundColor: "#f5f6f5",
+                    borderColor: "#d0d0d0",
+                    color: "#6b7280",
+                  },
+                }}
+              >
+                <RemoveIcon />
+              </IconButton>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  minWidth: "24px",
+                  textAlign: "center",
+                }}
+              >
+                {quantity}
+              </Typography>
+              <IconButton
+                onClick={() => handleAddToCart(product.id, variantId, "increment")}
+                disabled={isAdding}
+                sx={{
+                  backgroundColor: "#f5f6f5",
+                  border: "1px solid #d0d0d0",
+                  borderRadius: "4px",
+                  color: "#2d2d2d",
+                  "&:hover": {
+                    backgroundColor: "#e5e7eb",
+                    borderColor: "#4a90e2",
+                  },
+                  "&:disabled": {
+                    backgroundColor: "#f5f6f5",
+                    borderColor: "#d0d0d0",
+                    color: "#6b7280",
+                  },
+                }}
+              >
+                <AddIcon />
+              </IconButton>
+            </Box>
+          )}
         </div>
       </div>
 

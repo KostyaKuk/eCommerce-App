@@ -3,14 +3,17 @@ import styles from "./styles.module.css";
 import { NavLink, useNavigate } from "react-router-dom";
 import Button from "@mui/material/Button";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { IconButton, Drawer, Box } from "@mui/material";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import { IconButton, Drawer, Box, Badge } from "@mui/material";
 import { useCookieManager } from "../../hooks/useCookieManager";
 import MenuIcon from "@mui/icons-material/Menu";
 
 const Header = () => {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
+  const { totalLineItemQuantity } = useCart();
   const { removeCookie } = useCookieManager();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
@@ -21,6 +24,7 @@ const Header = () => {
     removeCookie("refresh_token");
     removeCookie("scope");
     removeCookie("token_type");
+    localStorage.removeItem("anonymousCartId");
     setMobileOpen(false);
   };
 
@@ -33,6 +37,11 @@ const Header = () => {
   const handleProfileClick = () => {
     if (mobileOpen) closeMobileMenu();
     navigate("/profile");
+  };
+
+  const handleCartClick = () => {
+    if (mobileOpen) closeMobileMenu();
+    navigate("/cart");
   };
 
   const renderNavLinks = (isMobile = false) => (
@@ -107,6 +116,16 @@ const Header = () => {
           </IconButton>
         </>
       )}
+      <IconButton
+        aria-label="cart"
+        color="primary"
+        sx={{ display: "block", mx: "auto" }}
+        onClick={isMobile ? handleCartClick : handleCartClick}
+      >
+        <Badge badgeContent={totalLineItemQuantity} color="secondary">
+          <ShoppingCartIcon />
+        </Badge>
+      </IconButton>
     </>
   );
 

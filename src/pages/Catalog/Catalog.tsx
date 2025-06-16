@@ -1,86 +1,163 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getProductsByCategory, getCategoryByLocalizedName, getSubcategories } from "../../utils/api";
+import {
+  getProductsByCategory,
+  getCategoryByLocalizedName,
+  getSubcategories,
+  addProductToCart,
+  getOrCreateCustomerCart,
+  getAnonymousCart,
+  createAnonymousCart,
+  changeLineItemQuantity,
+} from "../../utils/api";
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import { useCookieManager } from "../../hooks/useCookieManager";
+
 import Slider from "@mui/material/Slider";
+import { Button, CircularProgress, IconButton, Box, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
+import { ProductProjection } from "@commercetools/platform-sdk";
+
+import { ProductListProps } from "./Catalog.types";
 import "./Catalog.css";
 
-interface ProductAttribute {
-  name: string;
-  value: string | number | boolean;
-}
+const ProductList: React.FC<ProductListProps> = React.memo(
+  ({ products, loading, onAddToCart, isAdding, getProductQuantity }) => {
+    if (loading) return <p className="loading">Loading books...</p>;
+    if (!products.length) return <p className="loading">No books found.</p>;
 
-interface ProductPrice {
-  value: { centAmount: number; currencyCode: string };
-  discounted?: { value: { centAmount: number } };
-}
+    return (
+      <div className="product-grid">
+        {products.map((product) => {
+          const name = product.name?.["en-GB"] || "No title";
+          const attrs = product.masterVariant?.attributes || [];
+          const description = String(attrs.find((a) => a.name === "description")?.value || "No description");
+          const author = String(attrs.find((a) => a.name === "author")?.value || "Unknown Author");
+          const genre = String(attrs.find((a) => a.name === "genre")?.value || "No genre");
+          const image = product.masterVariant?.images?.[0]?.url;
+          const price = product.masterVariant?.prices?.[0];
+          const originalPrice = price?.value.centAmount ? price.value.centAmount / 100 : null;
+          const discountedPrice = price?.discounted?.value.centAmount ? price.discounted.value.centAmount / 100 : null;
+          const variantId = product.masterVariant?.id || 1;
+          const { quantity, lineItemId } = getProductQuantity(product.id, variantId);
 
-interface ProductVariant {
-  attributes?: ProductAttribute[];
-  images?: Array<{ url: string }>;
-  prices?: ProductPrice[];
-}
-
-interface Product {
-  id: string;
-  key?: string;
-  name?: { "en-GB"?: string };
-  masterVariant?: ProductVariant;
-}
-
-const ProductList: React.FC<{ products: Product[]; loading: boolean }> = React.memo(({ products, loading }) => {
-  if (loading) return <p className="loading">Loading books...</p>;
-  if (!products.length) return <p className="loading">No books found.</p>;
-
-  return (
-    <div className="product-grid">
-      {products.map((product) => {
-        const name = product.name?.["en-GB"] || "No title";
-        const attrs = product.masterVariant?.attributes || [];
-        const description = String(attrs.find((a) => a.name === "description")?.value || "No description");
-        const author = String(attrs.find((a) => a.name === "author")?.value || "Unknown Author");
-        const genre = String(attrs.find((a) => a.name === "genre")?.value || "No genre");
-        const image = product.masterVariant?.images?.[0]?.url;
-        const price = product.masterVariant?.prices?.[0];
-        const originalPrice = price?.value.centAmount ? price.value.centAmount / 100 : null;
-        const discountedPrice = price?.discounted?.value.centAmount ? price.discounted.value.centAmount / 100 : null;
-
-        return (
-          <div key={product.id} className="product-card">
-            {image ? (
-              <img src={image} alt={name} className="product-image" />
-            ) : (
-              <div className="product-image placeholder">No Image</div>
-            )}
-            <h2 className="product-name">{name}</h2>
-            <p className="product-author">By {author}</p>
-            <p className="product-description">{description}</p>
-            <p className="product-genre">Genre: {genre}</p>
-            <p className="product-price">
-              {originalPrice !== null ? (
-                discountedPrice !== null ? (
-                  <>
-                    <span className="original-price">£{(originalPrice * 0.8).toFixed(2)}</span>
-                    <span className="discounted-price">£{(discountedPrice * 0.8).toFixed(2)}</span>
-                  </>
-                ) : (
-                  `£${(originalPrice * 0.8).toFixed(2)}`
-                )
+          return (
+            <div key={product.id} className="product-card">
+              {image ? (
+                <img src={image} alt={name} className="product-image" />
               ) : (
-                "Price unavailable"
+                <div className="product-image placeholder">No Image</div>
               )}
-            </p>
-            <Link to={`/products/${product.key}`} className="view-details-button">
-              View Details
-            </Link>
-          </div>
-        );
-      })}
-    </div>
-  );
-});
+              <h2 className="product-name">{name}</h2>
+              <p className="product-author">By {author}</p>
+              <p className="product-description">{description}</p>
+              <p className="product-genre">Genre: {genre}</p>
+              <p className="product-price">
+                {originalPrice !== null ? (
+                  discountedPrice !== null ? (
+                    <>
+                      <span className="original-price">£{(originalPrice * 0.8).toFixed(2)}</span>
+                      <span className="discounted-price">£{(discountedPrice * 0.8).toFixed(2)}</span>
+                    </>
+                  ) : (
+                    `£${(originalPrice * 0.8).toFixed(2)}`
+                  )
+                ) : (
+                  "Price unavailable"
+                )}
+              </p>
+              <Link to={`/products/${product.key}`} className="view-details-button">
+                View Details
+              </Link>
+              {quantity === 0 ? (
+                <Button
+                  variant="contained"
+                  className="add-to-cart-button"
+                  onClick={() => onAddToCart(product.id, variantId, "add")}
+                  disabled={isAdding}
+                  startIcon={isAdding ? <CircularProgress size={20} /> : null}
+                >
+                  Add to Cart
+                </Button>
+              ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <IconButton
+                    onClick={() => onAddToCart(product.id, variantId, "decrement")}
+                    disabled={isAdding || !lineItemId}
+                    sx={{
+                      width: "37px",
+                      height: "37px",
+                      backgroundColor: "#f5f6f5",
+                      border: "1px solid #d0d0d0",
+                      borderRadius: "4px",
+                      color: "#2d2d2d",
+                      "&:hover": {
+                        backgroundColor: "#e5e7eb",
+                        borderColor: "#c15b5b",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "#f5f6f5",
+                        borderColor: "#d0d0d0",
+                        color: "#6b7280",
+                      },
+                    }}
+                  >
+                    <RemoveIcon />
+                  </IconButton>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "#2d2d2d",
+                      minWidth: "24px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {quantity}
+                  </Typography>
+                  <IconButton
+                    onClick={() => onAddToCart(product.id, variantId, "increment")}
+                    disabled={isAdding}
+                    sx={{
+                      width: "37px",
+                      height: "37px",
+                      backgroundColor: "#f5f6f5",
+                      border: "1px solid #d0d0d0",
+                      borderRadius: "4px",
+                      color: "#2d2d2d",
+                      "&:hover": {
+                        backgroundColor: "#e5e7eb",
+                        borderColor: "#4a90e2",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "#f5f6f5",
+                        borderColor: "#d0d0d0",
+                        color: "#6b7280",
+                      },
+                    }}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </Box>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+);
 
 const Catalog = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductProjection[]>([]);
   const [loading, setLoading] = useState(true);
   const [attributes, setAttributes] = useState<Record<string, string[]>>({});
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
@@ -90,6 +167,11 @@ const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [subcategories, setSubcategories] = useState<{ id: string; name: { "en-GB": string } }[]>([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const { cart, setCart } = useCart();
+  const { isLoggedIn } = useAuth();
+  const { cookies } = useCookieManager();
+  const [error, setError] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,7 +190,7 @@ const Catalog = () => {
         );
 
         const response = await getProductsByCategory(category.id);
-        const results: Product[] = response.results;
+        const results: ProductProjection[] = response.results;
 
         setProducts(results);
 
@@ -211,6 +293,82 @@ const Catalog = () => {
     applyFilters();
   }, [selectedFilters, priceRange, sortOrder, selectedSubcategory]);
 
+  const getProductQuantity = (productId: string, variantId: number) => {
+    const lineItem = cart?.lineItems.find((item) => item.productId === productId && item.variant.id === variantId);
+    return {
+      quantity: lineItem ? lineItem.quantity : 0,
+      lineItemId: lineItem ? lineItem.id : undefined,
+    };
+  };
+
+  const handleAddToCart = async (productId: string, variantId: number, action: "add" | "increment" | "decrement") => {
+    if (isAdding) {
+      console.log("Catalog: Skipping cart operation, operation in progress");
+      return;
+    }
+
+    setIsAdding(true);
+
+    try {
+      console.log(`Catalog: Performing ${action} for product:`, productId, variantId);
+      let cart;
+      let accessToken = null;
+
+      if (isLoggedIn && (localStorage.getItem("access_token") || cookies.access_token)) {
+        console.log("Catalog: Handling authenticated user cart...");
+        accessToken = localStorage.getItem("access_token") || cookies.access_token;
+        if (!accessToken) {
+          throw new Error("No access token available");
+        }
+        console.log("Catalog: Creating customer cart...");
+        cart = await getOrCreateCustomerCart(accessToken);
+        localStorage.setItem("cartId", cart.id);
+        localStorage.removeItem("anonymousCartId");
+      } else {
+        console.log("Catalog: Handling anonymous cart...");
+        const anonymousCartId = localStorage.getItem("anonymousCartId");
+        if (anonymousCartId) {
+          console.log("Catalog: Fetching existing anonymous cart:", anonymousCartId);
+          cart = await getAnonymousCart(anonymousCartId);
+        }
+        if (!cart) {
+          console.log("Catalog: Creating new anonymous cart...");
+          cart = await createAnonymousCart();
+          localStorage.setItem("anonymousCartId", cart.id);
+        }
+      }
+
+      let updatedCart;
+      const { quantity, lineItemId } = getProductQuantity(productId, variantId);
+
+      if (action === "add") {
+        updatedCart = await addProductToCart(cart.id, productId, variantId, 1, accessToken);
+      } else if (action === "increment") {
+        updatedCart = await changeLineItemQuantity(cart.id, lineItemId!, quantity + 1, accessToken);
+      } else if (action === "decrement" && lineItemId) {
+        updatedCart = await changeLineItemQuantity(cart.id, lineItemId, quantity - 1, accessToken);
+      }
+
+      if (updatedCart) {
+        setCart(updatedCart);
+        console.log(
+          "Catalog: Current cart contents:",
+          updatedCart.lineItems.map((item) => ({
+            id: item.id,
+            productId: item.productId,
+            quantity: item.quantity,
+            name: item.name["en-GB"],
+          }))
+        );
+      }
+    } catch (err) {
+      console.error(`Catalog: Error performing ${action} on cart:`, err);
+      setError("Failed to update cart");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   const handleFilterChange = (attrName: string, value: string) => {
     setSelectedFilters((prev) => ({ ...prev, [attrName]: value }));
   };
@@ -231,7 +389,7 @@ const Catalog = () => {
     setSelectedSubcategory("");
   };
 
-  const filterBySearch = (products: Product[]) => {
+  const filterBySearch = (products: ProductProjection[]) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return products;
 
@@ -245,6 +403,8 @@ const Catalog = () => {
       return name.includes(query) || author.includes(query);
     });
   };
+
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="catalog-container">
@@ -350,7 +510,13 @@ const Catalog = () => {
             <option value="author-desc">Author: Z → A</option>
           </select>
         </div>
-        <ProductList products={filterBySearch(products)} loading={loading} />
+        <ProductList
+          products={filterBySearch(products)}
+          loading={loading}
+          onAddToCart={handleAddToCart}
+          isAdding={isAdding}
+          getProductQuantity={getProductQuantity}
+        />
       </main>
     </div>
   );

@@ -1,5 +1,6 @@
 import { createApiBuilderFromCtpClient } from "@commercetools/platform-sdk";
 import {
+  Client,
   ClientBuilder,
   createAuthForClientCredentialsFlow,
   createAuthForPasswordFlow,
@@ -28,7 +29,7 @@ const httpMiddlewareOptions: HttpMiddlewareOptions = {
   fetch,
 };
 
-export const createPasswordFlowClient = (email: string, password: string) => {
+export const createPasswordFlowClient = (email: string, password: string): Client => {
   return new ClientBuilder()
     .withProjectKey(projectKey)
     .withMiddleware(
@@ -49,7 +50,7 @@ export const createPasswordFlowClient = (email: string, password: string) => {
     .build();
 };
 
-export const createExistingTokenClient = (token: string) => {
+export const createExistingTokenClient = (token: string): Client => {
   return new ClientBuilder()
     .withExistingTokenFlow(`Bearer ${token}`, { force: true })
     .withHttpMiddleware(httpMiddlewareOptions)

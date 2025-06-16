@@ -236,6 +236,22 @@
   color: #e02424;
 }
 
+.product-thumbnail,
+.product-main-image,
+.lightbox-image {
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.product-thumbnail:focus,
+.product-main-image:focus,
+.lightbox-image:focus {
+  outline: none;
+}
+
 @media (max-width: 1024px) {
   .product-container {
     flex-direction: column;

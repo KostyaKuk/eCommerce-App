@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useCookieManager } from "../hooks/useCookieManager";
+import { useCart } from "../context/CartContext";
 import "./LoginPage.css";
-import { loginUser } from "../utils/api";
+import { loginUser, getOrCreateCustomerCart } from "../utils/api";
 
 interface ValidationErrors {
   email: string;
@@ -18,8 +18,8 @@ const LoginPage = () => {
   const [serverError, setServerError] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
-  const { setIsLoggedIn, isLoggedIn, setCustomer } = useAuth();
-  const { setCookie } = useCookieManager();
+  const { setIsLoggedIn, isLoggedIn, setCustomer, setTokens } = useAuth();
+  const { setCart } = useCart();
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -58,17 +58,26 @@ const LoginPage = () => {
     if (isFormValid) {
       try {
         const { customer, accessToken, refreshToken } = await loginUser(email, password);
-        if (!accessToken || !refreshToken) {
+        if (!accessToken) {
           throw new Error("Authentication failed");
         }
-        setCookie("access_token", accessToken, {
-          expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        });
-        setCookie("refresh_token", refreshToken, {
-          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        });
+
+        localStorage.setItem("access_token", accessToken);
+        if (refreshToken) {
+          localStorage.setItem("refresh_token", refreshToken);
+        }
+
+        setTokens(accessToken, refreshToken || "");
         setIsLoggedIn(true);
         setCustomer(customer);
+
+        console.log("Testing getOrCreateCustomerCart with accessToken:", accessToken.substring(0, 10) + "...");
+        const cart = await getOrCreateCustomerCart(accessToken);
+        console.log("Test: Customer cart:", cart);
+
+        localStorage.setItem("cartId", cart.id);
+        localStorage.removeItem("anonymousCartId");
+        setCart(cart);
 
         navigate("/main");
       } catch (error) {
@@ -82,6 +91,7 @@ const LoginPage = () => {
         } else {
           setServerError("An error occurred. Try again later.");
         }
+        console.error("Login or cart error:", errorMessage);
       }
     }
   };

@@ -8,22 +8,25 @@ const AboutUs = () => {
     {
       name: "Eugeniusz Potapczuk",
       role: "Frontend dev",
-      description: "",
-      photo: "",
+      description: `Evgeniy is an enthusiastic developer with strong motivation.
+        Implemented the catalog page, authorization and basket!`,
+      photo: "/assets/evgeniy.jpg",
       github: "https://github.com/squallerq",
     },
     {
       name: "Vitali Rydkin",
       role: "Frontend dev",
-      description: "",
-      photo: "",
+      description: `If we talk about the most experienced developer in our team, it is Vitali.
+         He configured routing and created registration in the application.`,
+      photo: "/assets/vitaly.png",
       github: "https://github.com/vitali007tut",
     },
     {
       name: "Kanstantsin Kukushkin",
-      role: "Frontend dev",
-      description: "",
-      photo: "",
+      role: "Team Lead / Frontend dev",
+      description: `Configured repository setup and development environment configuration.
+      Created profile page and about us`,
+      photo: "/assets/kukushkin.jpg",
       github: "https://github.com/kostyakuk",
     },
   ];
@@ -80,7 +83,7 @@ const AboutUs = () => {
                 <Typography variant="subtitle1" color="text.secondary" className={styles.roleText}>
                   {dev.role}
                 </Typography>
-                <Typography variant="body1" align="center">
+                <Typography variant="body1" align="center" style={{ whiteSpace: "pre-line" }}>
                   {dev.description}
                 </Typography>
                 <Box textAlign="center" mt={2}>
