@@ -1,6 +1,10 @@
 .product-page {
   background-color: #f5f6f5;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   padding: 24px 24px 7px;
 }
 
@@ -234,6 +238,22 @@
 
 .error {
   color: #e02424;
+}
+
+.product-thumbnail,
+.product-main-image,
+.lightbox-image {
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.product-thumbnail:focus,
+.product-main-image:focus,
+.lightbox-image:focus {
+  outline: none;
 }
 
 @media (max-width: 1024px) {

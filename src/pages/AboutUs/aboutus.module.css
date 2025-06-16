@@ -1,0 +1,56 @@
+.pageTitle {
+    font-weight: bold;
+    margin-bottom: 2rem;
+    text-align: center;
+    gap: 8px;
+    display: flex;
+  }
+  
+  .projectDescription {
+    margin-bottom: 3rem;
+    text-align: center;
+  }
+  
+  .teamTitle {
+    margin-bottom: 2rem;
+    margin-top: 4rem;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .developerCard {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s;
+  }
+  
+  .developerCard:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .avatarContainer {
+    display: flex;
+    justify-content: center;
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+  }
+  
+  .avatar {
+    width: 120px;
+    height: 120px;
+    border: 3px solid;
+    border-color: var(--primary-color);
+  }
+  
+  .iconContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .roleText {
+    text-align: center;
+    margin-bottom: 1rem;
+  }

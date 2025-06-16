@@ -7,8 +7,10 @@ import ProductPage from "../pages/ProductPage/ProductPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import Cart from "../pages/Cart/Cart";
 import { PublicRoute } from "./PublicRoute";
 import { PrivateRoute } from "./PrivateRoute";
+import AboutUs from "../pages/AboutUs";
 
 export const Router = () => {
   return (
@@ -19,7 +21,8 @@ export const Router = () => {
 
         <Route path="catalog" element={<Catalog />} />
         <Route path="products/:key" element={<ProductPage />} />
-
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="cart" element={<Cart />} />
         <Route element={<PublicRoute redirectTo="/" />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

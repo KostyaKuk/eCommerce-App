@@ -15,7 +15,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@commercetools/platform-sdk": "^8.8.0",
+    "@commercetools/platform-sdk": "^8.11.0",
     "@commercetools/sdk-client-v2": "^3.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
