@@ -25,7 +25,12 @@ import "./Catalog.css";
 
 const ProductList: React.FC<ProductListProps> = React.memo(
   ({ products, loading, onAddToCart, isAdding, getProductQuantity }) => {
-    if (loading) return <p className="loading">Loading books...</p>;
+    if (loading)
+      return (
+        <div className="loading">
+          <CircularProgress size={40} />
+        </div>
+      );
     if (!products.length) return <p className="loading">No books found.</p>;
 
     return (
@@ -58,11 +63,11 @@ const ProductList: React.FC<ProductListProps> = React.memo(
                 {originalPrice !== null ? (
                   discountedPrice !== null ? (
                     <>
-                      <span className="original-price">£{(originalPrice * 0.8).toFixed(2)}</span>
-                      <span className="discounted-price">£{(discountedPrice * 0.8).toFixed(2)}</span>
+                      <span className="original-price">£{originalPrice.toFixed(2)}</span>
+                      <span className="discounted-price">£{discountedPrice.toFixed(2)}</span>
                     </>
                   ) : (
-                    `£${(originalPrice * 0.8).toFixed(2)}`
+                    `£${originalPrice.toFixed(2)}`
                   )
                 ) : (
                   "Price unavailable"
@@ -172,6 +177,9 @@ const Catalog = () => {
   const { cookies } = useCookieManager();
   const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -189,16 +197,15 @@ const Catalog = () => {
             }))
         );
 
-        const response = await getProductsByCategory(category.id);
-        const results: ProductProjection[] = response.results;
-
-        setProducts(results);
+        const response = await getProductsByCategory(category.id, [], undefined, 0, itemsPerPage);
+        setProducts(response.results);
+        setTotalItems(response.total || response.results.length);
 
         const attrMap: Record<string, Set<string>> = {};
         let minPrice = Infinity;
         let maxPrice = -Infinity;
 
-        results.forEach((product) => {
+        response.results.forEach((product) => {
           const attrs = product.masterVariant?.attributes || [];
           attrs.forEach((attr) => {
             if (attr.name !== "description" && attr.value) {
@@ -209,7 +216,7 @@ const Catalog = () => {
 
           const price = product.masterVariant?.prices?.[0]?.value?.centAmount;
           if (typeof price === "number" && price > 0) {
-            const pricePounds = (price / 100) * 0.8;
+            const pricePounds = price / 100;
             minPrice = Math.min(minPrice, pricePounds);
             maxPrice = Math.max(maxPrice, pricePounds);
           }
@@ -257,8 +264,8 @@ const Catalog = () => {
       });
 
       const [minPrice, maxPrice] = priceRange;
-      const minCent = Math.round((minPrice / 0.8) * 100);
-      const maxCent = Math.round((maxPrice / 0.8) * 100);
+      const minCent = Math.round(minPrice * 100);
+      const maxCent = Math.round(maxPrice * 100);
       filterArgs.push(`variants.price.centAmount:range(${minCent} to ${maxCent})`);
 
       const sortMap: Record<string, string> = {
@@ -269,19 +276,25 @@ const Catalog = () => {
       };
 
       const sortQuery = sortMap[sortOrder] || undefined;
+      const offset = (currentPage - 1) * itemsPerPage;
 
-      const response = await getProductsByCategory(category.id, filterArgs, sortQuery);
+      const response = await getProductsByCategory(category.id, filterArgs, sortQuery, offset, itemsPerPage);
       const results = response.results;
 
       if (sortOrder === "author-asc" || sortOrder === "author-desc") {
         results.sort((a, b) => {
           const aAuthor = (a.masterVariant?.attributes?.find((attr) => attr.name === "author")?.value as string) || "";
           const bAuthor = (b.masterVariant?.attributes?.find((attr) => attr.name === "author")?.value as string) || "";
-          return sortOrder === "author-asc" ? aAuthor.localeCompare(bAuthor) : bAuthor.localeCompare(aAuthor);
+          return sortOrder === "author-asc" ? aAuthor.localeCompare(bAuthor) : bAuthor.localeCompare(bAuthor);
         });
       }
 
       setProducts(results);
+      setTotalItems(response.total || results.length);
+
+      if (results.length === 0 && currentPage !== 1) {
+        setCurrentPage(1);
+      }
     } catch (error) {
       console.error("Error applying filters:", error);
     } finally {
@@ -291,7 +304,7 @@ const Catalog = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [selectedFilters, priceRange, sortOrder, selectedSubcategory]);
+  }, [selectedFilters, priceRange, sortOrder, selectedSubcategory, currentPage]);
 
   const getProductQuantity = (productId: string, variantId: number) => {
     const lineItem = cart?.lineItems.find((item) => item.productId === productId && item.variant.id === variantId);
@@ -303,36 +316,29 @@ const Catalog = () => {
 
   const handleAddToCart = async (productId: string, variantId: number, action: "add" | "increment" | "decrement") => {
     if (isAdding) {
-      console.log("Catalog: Skipping cart operation, operation in progress");
       return;
     }
 
     setIsAdding(true);
 
     try {
-      console.log(`Catalog: Performing ${action} for product:`, productId, variantId);
       let cart;
       let accessToken = null;
 
       if (isLoggedIn && (localStorage.getItem("access_token") || cookies.access_token)) {
-        console.log("Catalog: Handling authenticated user cart...");
         accessToken = localStorage.getItem("access_token") || cookies.access_token;
         if (!accessToken) {
           throw new Error("No access token available");
         }
-        console.log("Catalog: Creating customer cart...");
         cart = await getOrCreateCustomerCart(accessToken);
         localStorage.setItem("cartId", cart.id);
         localStorage.removeItem("anonymousCartId");
       } else {
-        console.log("Catalog: Handling anonymous cart...");
         const anonymousCartId = localStorage.getItem("anonymousCartId");
         if (anonymousCartId) {
-          console.log("Catalog: Fetching existing anonymous cart:", anonymousCartId);
           cart = await getAnonymousCart(anonymousCartId);
         }
         if (!cart) {
-          console.log("Catalog: Creating new anonymous cart...");
           cart = await createAnonymousCart();
           localStorage.setItem("anonymousCartId", cart.id);
         }
@@ -351,18 +357,8 @@ const Catalog = () => {
 
       if (updatedCart) {
         setCart(updatedCart);
-        console.log(
-          "Catalog: Current cart contents:",
-          updatedCart.lineItems.map((item) => ({
-            id: item.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            name: item.name["en-GB"],
-          }))
-        );
       }
-    } catch (err) {
-      console.error(`Catalog: Error performing ${action} on cart:`, err);
+    } catch {
       setError("Failed to update cart");
     } finally {
       setIsAdding(false);
@@ -371,14 +367,17 @@ const Catalog = () => {
 
   const handleFilterChange = (attrName: string, value: string) => {
     setSelectedFilters((prev) => ({ ...prev, [attrName]: value }));
+    setCurrentPage(1);
   };
 
   const handlePriceChange = (_: Event, newValue: number | number[]) => {
     setPriceRange(newValue as [number, number]);
+    setCurrentPage(1);
   };
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedSubcategory(categoryId);
+    setCurrentPage(1);
   };
 
   const resetFilters = () => {
@@ -387,6 +386,7 @@ const Catalog = () => {
     setSortOrder("");
     setSearchQuery("");
     setSelectedSubcategory("");
+    setCurrentPage(1);
   };
 
   const filterBySearch = (products: ProductProjection[]) => {
@@ -403,6 +403,13 @@ const Catalog = () => {
       return name.includes(query) || author.includes(query);
     });
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const filteredProducts = filterBySearch(products);
 
   if (error) return <div>Error: {error}</div>;
 
@@ -511,12 +518,35 @@ const Catalog = () => {
           </select>
         </div>
         <ProductList
-          products={filterBySearch(products)}
+          products={filteredProducts}
           loading={loading}
           onAddToCart={handleAddToCart}
           isAdding={isAdding}
           getProductQuantity={getProductQuantity}
         />
+        {filteredProducts.length > 0 && (
+          <div className="pagination">
+            <Button
+              variant="contained"
+              disabled={currentPage === 1 || loading}
+              onClick={() => handlePageChange(currentPage - 1)}
+              className="pagination-button"
+            >
+              Previous
+            </Button>
+            <Typography variant="body1" className="pagination-info">
+              Page {currentPage} of {totalPages}
+            </Typography>
+            <Button
+              variant="contained"
+              disabled={currentPage === totalPages || loading}
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="pagination-button"
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </main>
     </div>
   );

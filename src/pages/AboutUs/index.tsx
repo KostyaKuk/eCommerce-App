@@ -32,10 +32,10 @@ const AboutUs = () => {
   ];
 
   return (
-    <Container maxWidth="lg" style={{ padding: "2rem 0" }}>
+    <Container maxWidth="lg" sx={{ padding: "2rem 0" }}>
       <Typography variant="h2" gutterBottom className={styles.pageTitle}>
         About our project on
-        <Link href="https://rs.school/" target="_blank" rel="noopener noreferrer" style={{ lineHeight: 0 }}>
+        <Link href="https://rs.school/" target="_blank" rel="noopener noreferrer" sx={{ lineHeight: 0, mx: 1 }}>
           <img
             src="/assets/rssLogo.svg"
             alt="RS School Logo"
@@ -43,13 +43,14 @@ const AboutUs = () => {
               width: "70px",
               height: "auto",
               cursor: "pointer",
+              verticalAlign: "middle",
             }}
           />
         </Link>
         school:
       </Typography>
 
-      <Typography variant="body1" component="p" style={{ marginBottom: "3rem" }}>
+      <Typography variant="body1" component="p" sx={{ marginBottom: "3rem", textAlign: "center" }}>
         Our school exam project began a month ago with a three-person team. Today, we're proud to introduce a
         cutting-edge book purchasing and global delivery platform.
       </Typography>
@@ -59,14 +60,14 @@ const AboutUs = () => {
       </Typography>
 
       <Grid container spacing={4} justifyContent="center">
-        {developers.map((dev) => (
-          <Grid container spacing={4} justifyContent="center">
+        {developers.map((dev, index) => (
+          <Grid item xs={12} sm={6} md={4} key={dev.name || index}>
             <Card className={styles.developerCard}>
               <Box className={styles.avatarContainer}>
                 <Avatar alt={dev.name} src={dev.photo} className={styles.avatar} />
               </Box>
-              <CardContent style={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h5" component="h3" align="center">
+              <CardContent sx={{ flexGrow: 1, textAlign: "center" }}>
+                <Typography gutterBottom variant="h5" component="h3">
                   {dev.name}
                 </Typography>
                 <Box className={styles.iconContainer}>
@@ -83,10 +84,10 @@ const AboutUs = () => {
                 <Typography variant="subtitle1" color="text.secondary" className={styles.roleText}>
                   {dev.role}
                 </Typography>
-                <Typography variant="body1" align="center" style={{ whiteSpace: "pre-line" }}>
+                <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
                   {dev.description}
                 </Typography>
-                <Box textAlign="center" mt={2}>
+                <Box mt={2}>
                   <Link href={dev.github} target="_blank" rel="noopener noreferrer" underline="hover">
                     View GitHub Profile
                   </Link>

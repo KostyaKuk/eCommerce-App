@@ -24,7 +24,31 @@ export const getCategoryByLocalizedName = async (name: string, locale: string) =
   }
 };
 
-export const getProductsByCategory = async (categoryId: string, filters: string[] = [], sort?: string) => {
+// export const getProductsByCategory = async (categoryId: string, filters: string[] = [], sort?: string) => {
+//   try {
+//     const response = await apiRoot
+//       .productProjections()
+//       .search()
+//       .get({
+//         queryArgs: {
+//           "filter.query": [`categories.id:"${categoryId}"`, ...filters],
+//           ...(sort ? { sort } : {}),
+//         },
+//       })
+//       .execute();
+//     return response.body;
+//   } catch (error) {
+//     console.error("API error:", error);
+//     throw error;
+//   }
+// };
+export const getProductsByCategory = async (
+  categoryId: string,
+  filters: string[] = [],
+  sort?: string,
+  offset: number = 0,
+  limit: number = 10
+) => {
   try {
     const response = await apiRoot
       .productProjections()
@@ -33,6 +57,9 @@ export const getProductsByCategory = async (categoryId: string, filters: string[
         queryArgs: {
           "filter.query": [`categories.id:"${categoryId}"`, ...filters],
           ...(sort ? { sort } : {}),
+          offset,
+          limit,
+          expand: ["categories[*]"],
         },
       })
       .execute();
@@ -122,7 +149,6 @@ let anonymousTokenStore: TokenStore | undefined = undefined;
 const anonymousTokenCache: TokenCache = {
   set(cache: TokenStore) {
     anonymousTokenStore = cache;
-    console.log("Anonymous token cached:", cache);
   },
   get() {
     return anonymousTokenStore ?? { token: "", refreshToken: "", expirationTime: 0 };
@@ -150,18 +176,11 @@ const anonymousClient = new ClientBuilder()
 const apiRootAnonymous = createApiBuilderFromCtpClient(anonymousClient).withProjectKey({ projectKey });
 
 export const getOrCreateCustomerCart = async (accessToken: string): Promise<Cart> => {
-  if (!accessToken || typeof accessToken !== "string") {
-    console.error("getOrCreateCustomerCart: Invalid accessToken:", accessToken);
-    throw new Error("Access token must be a non-empty string");
-  }
-
   try {
-    console.log("getOrCreateCustomerCart: Creating customer client with token:", accessToken);
     const customerClient = createExistingTokenClient(accessToken);
 
     const apiRootCustomer = createApiBuilderFromCtpClient(customerClient).withProjectKey({ projectKey });
 
-    console.log("getOrCreateCustomerCart: Fetching active cart...");
     const cartResponse = await apiRootCustomer
       .me()
       .carts()
@@ -173,12 +192,9 @@ export const getOrCreateCustomerCart = async (accessToken: string): Promise<Cart
       })
       .execute();
 
-    console.log("getOrCreateCustomerCart: Cart response:", cartResponse.body.results);
-
     let cart: Cart | undefined = cartResponse.body.results[0];
 
     if (!cart) {
-      console.log("getOrCreateCustomerCart: No active cart found, creating new cart...");
       const createCartResponse = await apiRootCustomer
         .me()
         .carts()
@@ -193,7 +209,6 @@ export const getOrCreateCustomerCart = async (accessToken: string): Promise<Cart
         .execute();
 
       cart = createCartResponse.body;
-      console.log("getOrCreateCustomerCart: Customer cart created:", cart);
     }
 
     return cart;
@@ -206,7 +221,6 @@ export const getOrCreateCustomerCart = async (accessToken: string): Promise<Cart
 export const createAnonymousCart = async (): Promise<Cart> => {
   try {
     anonymousTokenStore = undefined;
-    console.log("createAnonymousCart: Creating anonymous cart...");
     const response = await apiRootAnonymous
       .carts()
       .post({
@@ -219,7 +233,6 @@ export const createAnonymousCart = async (): Promise<Cart> => {
         },
       })
       .execute();
-    console.log("createAnonymousCart: Anonymous cart created:", response.body);
     return response.body;
   } catch (error) {
     console.error("createAnonymousCart: Error creating anonymous cart:", error);
@@ -229,7 +242,6 @@ export const createAnonymousCart = async (): Promise<Cart> => {
 
 export const getAnonymousCart = async (cartId: string): Promise<Cart | null> => {
   try {
-    console.log("getAnonymousCart: Fetching anonymous cart...");
     const response = await apiRootAnonymous
       .carts()
       .withId({ ID: cartId })
@@ -239,7 +251,6 @@ export const getAnonymousCart = async (cartId: string): Promise<Cart | null> => 
         },
       })
       .execute();
-    console.log("getAnonymousCart: Fetched anonymous cart:", response.body);
     return response.body;
   } catch (error) {
     console.error("getAnonymousCart: Error fetching anonymous cart:", error);
@@ -248,22 +259,18 @@ export const getAnonymousCart = async (cartId: string): Promise<Cart | null> => 
 };
 
 export const deleteAnonymousCart = async (cartId: string): Promise<void> => {
-  console.log("deleteAnonymousCart: Starting with cartId:", cartId);
   try {
     let attempt = 0;
     const maxRetries = 2;
 
     while (attempt < maxRetries) {
       try {
-        console.log("deleteAnonymousCart: Fetching current cart version...");
         const response = await apiRootAnonymous.carts().withId({ ID: cartId }).get().execute();
 
         const version = response.body.version;
 
-        console.log("deleteAnonymousCart: Deleting anonymous cart...");
         await apiRootAnonymous.carts().withId({ ID: cartId }).delete({ queryArgs: { version } }).execute();
 
-        console.log("deleteAnonymousCart: Anonymous cart deleted");
         return;
       } catch (error) {
         if (error.statusCode === 409 && attempt < maxRetries - 1) {
@@ -290,11 +297,9 @@ export const addProductToCart = async (
       ? createApiBuilderFromCtpClient(createExistingTokenClient(accessToken)).withProjectKey({ projectKey })
       : apiRootAnonymous;
 
-    console.log("addProductToCart: Fetching current cart version...");
     const cartResponse = await apiRoot.carts().withId({ ID: cartId }).get().execute();
     const cartVersion = cartResponse.body.version;
 
-    console.log("addProductToCart: Adding product to cart...");
     const response = await apiRoot
       .carts()
       .withId({ ID: cartId })
@@ -334,11 +339,9 @@ export const changeLineItemQuantity = async (
       ? createApiBuilderFromCtpClient(createExistingTokenClient(accessToken)).withProjectKey({ projectKey })
       : apiRootAnonymous;
 
-    console.log("changeLineItemQuantity: Fetching current cart version...");
     const cartResponse = await apiRoot.carts().withId({ ID: cartId }).get().execute();
     const cartVersion = cartResponse.body.version;
 
-    console.log("changeLineItemQuantity: Updating line item quantity...");
     const response = await apiRoot
       .carts()
       .withId({ ID: cartId })

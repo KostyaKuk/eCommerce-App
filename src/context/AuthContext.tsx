@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initAuth = async () => {
       if (isInitializingRef.current) {
-        console.log("AuthContext: Skipping auth init, initialization in progress");
         return;
       }
 
@@ -84,10 +83,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsLoggedIn(true);
           const anonymousCartId = localStorage.getItem("anonymousCartId");
           if (anonymousCartId) {
-            console.log("AuthContext: Deleting anonymous cart:", anonymousCartId);
             await deleteAnonymousCart(anonymousCartId);
             localStorage.removeItem("anonymousCartId");
-            console.log("AuthContext: Anonymous cart deleted and removed from localStorage");
           }
         }
       } catch (error) {
