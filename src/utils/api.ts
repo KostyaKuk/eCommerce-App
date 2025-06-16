@@ -365,3 +365,23 @@ export const changeLineItemQuantity = async (
     throw new Error("Failed to update line item quantity");
   }
 };
+export async function applyDiscountCode(cartId: string, cartVersion: number, code: string): Promise<Cart> {
+  try {
+    const response = await apiRoot
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        queryArgs: {
+          expand: ["lineItems[*].product.custom"],
+        },
+        body: {
+          version: cartVersion,
+          actions: [{ action: "addDiscountCode", code: code.trim() }],
+        },
+      })
+      .execute();
+    return response.body;
+  } catch (error) {
+    throw new Error(error.message || "Invalid promo code");
+  }
+}

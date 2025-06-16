@@ -1,6 +1,10 @@
 .product-page {
   background-color: #f5f6f5;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   padding: 24px 24px 7px;
 }
 
