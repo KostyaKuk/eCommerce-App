@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProductByKey, addProductToCart, changeLineItemQuantity, createAnonymousCart } from "../../utils/api";
+import {
+  getProductByKey,
+  addProductToCart,
+  changeLineItemQuantity,
+  createAnonymousCart,
+  getOrCreateCustomerCart,
+} from "../../utils/api";
 import { Product } from "@commercetools/platform-sdk";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
@@ -18,7 +24,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 const ProductPage: React.FC = () => {
   const { key } = useParams<{ key: string }>();
   const { cart, setCart } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, accessToken } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,37 +63,49 @@ const ProductPage: React.FC = () => {
   };
 
   const handleAddToCart = async (productId: string, variantId: number, action: "add" | "increment" | "decrement") => {
+    if (isAdding) return;
     setIsAdding(true);
+
     try {
       let currentCart = cart;
-      if (!currentCart && !isLoggedIn) {
-        console.log("ProductPage: No cart exists, creating anonymous cart...");
-        const newCart = await createAnonymousCart();
-        localStorage.setItem("anonymousCartId", newCart.id);
-        setCart(newCart);
-        currentCart = newCart;
-      } else if (!currentCart) {
-        console.log("ProductPage: No cart for logged-in user, cannot proceed");
-        return;
+
+      if (!currentCart) {
+        if (isLoggedIn && accessToken) {
+          currentCart = await getOrCreateCustomerCart(accessToken);
+          localStorage.setItem("cartId", currentCart.id);
+        } else {
+          currentCart = await createAnonymousCart();
+          localStorage.setItem("anonymousCartId", currentCart.id);
+        }
+        setCart(currentCart);
       }
 
-      console.log(`ProductPage: Performing ${action} for product: ${productId}, variant: ${variantId}`);
       let updatedCart;
+      const { quantity: currentQuantity, lineItemId } = getProductQuantity(productId, variantId);
+
       if (action === "add" || action === "increment") {
-        updatedCart = await addProductToCart(currentCart.id, productId, variantId, 1);
-      } else if (action === "decrement") {
-        const { lineItemId, quantity: currentQuantity } = getProductQuantity(productId, variantId);
-        if (lineItemId && currentQuantity > 0) {
-          const newQuantity = currentQuantity - 1;
-          updatedCart = await changeLineItemQuantity(currentCart.id, lineItemId, newQuantity);
-        }
+        updatedCart = await addProductToCart(
+          currentCart.id,
+          productId,
+          variantId,
+          1,
+          isLoggedIn ? accessToken : undefined
+        );
+      } else if (action === "decrement" && lineItemId && currentQuantity > 0) {
+        updatedCart = await changeLineItemQuantity(
+          currentCart.id,
+          lineItemId,
+          currentQuantity - 1,
+          isLoggedIn ? accessToken : undefined
+        );
       }
+
       if (updatedCart) {
         setCart(updatedCart);
-        console.log("ProductPage: Updated cart:", updatedCart);
       }
     } catch (err) {
       console.error(`ProductPage: Error performing ${action}:`, err);
+      setError("Failed to update cart");
     } finally {
       setIsAdding(false);
     }

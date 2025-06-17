@@ -1,4 +1,4 @@
-import { createApiBuilderFromCtpClient, Cart } from "@commercetools/platform-sdk";
+import { Cart, createApiBuilderFromCtpClient, CartUpdateAction } from "@commercetools/platform-sdk";
 import { ctpClient, createExistingTokenClient } from "./BuildClient";
 import {
   ClientBuilder,
@@ -8,7 +8,7 @@ import {
   TokenStore,
 } from "@commercetools/sdk-client-v2";
 
-const projectKey = import.meta.env.VITE_CTP_PROJECT_KEY;
+export const projectKey = import.meta.env.VITE_CTP_PROJECT_KEY;
 const apiRoot = createApiBuilderFromCtpClient(ctpClient).withProjectKey({ projectKey });
 
 export const getCategoryByLocalizedName = async (name: string, locale: string) => {
@@ -24,30 +24,12 @@ export const getCategoryByLocalizedName = async (name: string, locale: string) =
   }
 };
 
-// export const getProductsByCategory = async (categoryId: string, filters: string[] = [], sort?: string) => {
-//   try {
-//     const response = await apiRoot
-//       .productProjections()
-//       .search()
-//       .get({
-//         queryArgs: {
-//           "filter.query": [`categories.id:"${categoryId}"`, ...filters],
-//           ...(sort ? { sort } : {}),
-//         },
-//       })
-//       .execute();
-//     return response.body;
-//   } catch (error) {
-//     console.error("API error:", error);
-//     throw error;
-//   }
-// };
 export const getProductsByCategory = async (
   categoryId: string,
   filters: string[] = [],
   sort?: string,
   offset: number = 0,
-  limit: number = 10
+  limit: number = 12
 ) => {
   try {
     const response = await apiRoot
@@ -175,10 +157,9 @@ const anonymousClient = new ClientBuilder()
 
 const apiRootAnonymous = createApiBuilderFromCtpClient(anonymousClient).withProjectKey({ projectKey });
 
-export const getOrCreateCustomerCart = async (accessToken: string): Promise<Cart> => {
+export const getOrCreateCustomerCart = async (accessToken: string, anonymousCartId?: string): Promise<Cart> => {
   try {
     const customerClient = createExistingTokenClient(accessToken);
-
     const apiRootCustomer = createApiBuilderFromCtpClient(customerClient).withProjectKey({ projectKey });
 
     const cartResponse = await apiRootCustomer
@@ -204,10 +185,10 @@ export const getOrCreateCustomerCart = async (accessToken: string): Promise<Cart
             country: "GB",
             inventoryMode: "None",
             shippingMode: "Single",
+            ...(anonymousCartId ? { anonymousCart: { id: anonymousCartId, type: "Cart" } } : {}),
           },
         })
         .execute();
-
       cart = createCartResponse.body;
     }
 
@@ -215,6 +196,84 @@ export const getOrCreateCustomerCart = async (accessToken: string): Promise<Cart
   } catch (error) {
     console.error("getOrCreateCustomerCart: Error fetching or creating cart:", error);
     throw new Error("Failed to fetch or create customer cart");
+  }
+};
+
+export const mergeAnonymousCartToCustomerCart = async (
+  anonymousCartId: string,
+  customerCartId: string,
+  accessToken: string
+): Promise<Cart> => {
+  try {
+    const customerClient = createExistingTokenClient(accessToken);
+    const apiRootCustomer = createApiBuilderFromCtpClient(customerClient).withProjectKey({ projectKey });
+
+    const anonymousCart = await apiRootAnonymous
+      .carts()
+      .withId({ ID: anonymousCartId })
+      .get({
+        queryArgs: { expand: ["lineItems[*].product"] },
+      })
+      .execute()
+      .then((res) => res.body);
+
+    if (!anonymousCart.lineItems.length) {
+      return await apiRootCustomer
+        .carts()
+        .withId({ ID: customerCartId })
+        .get()
+        .execute()
+        .then((res) => res.body);
+    }
+
+    const customerCart = await apiRootCustomer
+      .carts()
+      .withId({ ID: customerCartId })
+      .get()
+      .execute()
+      .then((res) => res.body);
+
+    const addLineItemActions: CartUpdateAction[] = anonymousCart.lineItems.map((item) => ({
+      action: "addLineItem",
+      productId: item.productId,
+      variantId: item.variant.id,
+      quantity: item.quantity,
+    }));
+
+    const updatedCustomerCart = await apiRootCustomer
+      .carts()
+      .withId({ ID: customerCartId })
+      .post({
+        queryArgs: { expand: ["lineItems[*].product"] },
+        body: {
+          version: customerCart.version,
+          actions: addLineItemActions,
+        },
+      })
+      .execute()
+      .then((res) => res.body);
+
+    const anonymousCartVersion = anonymousCart.version;
+    const removeLineItemActions: CartUpdateAction[] = anonymousCart.lineItems.map((item) => ({
+      action: "removeLineItem",
+      lineItemId: item.id,
+    }));
+
+    await apiRootAnonymous
+      .carts()
+      .withId({ ID: anonymousCartId })
+      .post({
+        body: {
+          version: anonymousCartVersion,
+          actions: removeLineItemActions,
+        },
+      })
+      .execute();
+
+    return updatedCustomerCart;
+  } catch (error) {
+    console.error("mergeAnonymousCartToCustomerCart: Error merging carts:", error);
+    throw new Error("Failed to merge anonymous cart to customer cart");
   }
 };
 
@@ -258,33 +317,6 @@ export const getAnonymousCart = async (cartId: string): Promise<Cart | null> => 
   }
 };
 
-export const deleteAnonymousCart = async (cartId: string): Promise<void> => {
-  try {
-    let attempt = 0;
-    const maxRetries = 2;
-
-    while (attempt < maxRetries) {
-      try {
-        const response = await apiRootAnonymous.carts().withId({ ID: cartId }).get().execute();
-
-        const version = response.body.version;
-
-        await apiRootAnonymous.carts().withId({ ID: cartId }).delete({ queryArgs: { version } }).execute();
-
-        return;
-      } catch (error) {
-        if (error.statusCode === 409 && attempt < maxRetries - 1) {
-          console.warn("deleteAnonymousCart: Version conflict, retrying...");
-          attempt++;
-        } else {
-          throw error;
-        }
-      }
-    }
-  } catch (error) {
-    console.warn("deleteAnonymousCart: Failed to delete cart:", error);
-  }
-};
 export const addProductToCart = async (
   cartId: string,
   productId: string,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Typography, Grid, Card, CardContent, Avatar, Box, Link, IconButton } from "@mui/material";
+import { Container, Typography, Card, CardContent, Avatar, Box, Link, IconButton } from "@mui/material";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import styles from "./AboutUs.module.css";
 
@@ -59,44 +59,42 @@ const AboutUs = () => {
         Our team:
       </Typography>
 
-      <Grid container spacing={4} justifyContent="center">
+      <div className={styles.developerGrid}>
         {developers.map((dev, index) => (
-          <Grid item xs={12} sm={6} md={4} key={dev.name || index}>
-            <Card className={styles.developerCard}>
-              <Box className={styles.avatarContainer}>
-                <Avatar alt={dev.name} src={dev.photo} className={styles.avatar} />
+          <Card key={dev.name || index} className={styles.developerCard}>
+            <Box className={styles.avatarContainer}>
+              <Avatar alt={dev.name} src={dev.photo} className={styles.avatar} />
+            </Box>
+            <CardContent sx={{ flexGrow: 1, textAlign: "center" }}>
+              <Typography gutterBottom variant="h5" component="h3">
+                {dev.name}
+              </Typography>
+              <Box className={styles.iconContainer}>
+                <IconButton
+                  aria-label={`${dev.name} GitHub`}
+                  href={dev.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  color="primary"
+                >
+                  <GitHubIcon fontSize="large" />
+                </IconButton>
               </Box>
-              <CardContent sx={{ flexGrow: 1, textAlign: "center" }}>
-                <Typography gutterBottom variant="h5" component="h3">
-                  {dev.name}
-                </Typography>
-                <Box className={styles.iconContainer}>
-                  <IconButton
-                    aria-label={`${dev.name} GitHub`}
-                    href={dev.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    color="primary"
-                  >
-                    <GitHubIcon fontSize="large" />
-                  </IconButton>
-                </Box>
-                <Typography variant="subtitle1" color="text.secondary" className={styles.roleText}>
-                  {dev.role}
-                </Typography>
-                <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
-                  {dev.description}
-                </Typography>
-                <Box mt={2}>
-                  <Link href={dev.github} target="_blank" rel="noopener noreferrer" underline="hover">
-                    View GitHub Profile
-                  </Link>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+              <Typography variant="subtitle1" color="text.secondary" className={styles.roleText}>
+                {dev.role}
+              </Typography>
+              <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
+                {dev.description}
+              </Typography>
+              <Box mt={2}>
+                <Link href={dev.github} target="_blank" rel="noopener noreferrer" underline="hover">
+                  View GitHub Profile
+                </Link>
+              </Box>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </div>
     </Container>
   );
 };

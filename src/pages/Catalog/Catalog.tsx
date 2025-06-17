@@ -179,13 +179,16 @@ const Catalog = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const category = await getCategoryByLocalizedName("Books", "en-GB");
-        if (!category) return;
+        if (!category) {
+          setError("Category 'Books' not found");
+          return;
+        }
 
         const subs = await getSubcategories(category.id);
         setSubcategories(
@@ -233,7 +236,8 @@ const Catalog = () => {
         setPriceLimits([finalMinPrice, finalMaxPrice]);
         setPriceRange([finalMinPrice, finalMaxPrice]);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Catalog: Error fetching initial data:", error);
+        setError("Failed to load catalog");
       } finally {
         setLoading(false);
       }
@@ -247,7 +251,10 @@ const Catalog = () => {
 
     try {
       const category = await getCategoryByLocalizedName("Books", "en-GB");
-      if (!category) return;
+      if (!category) {
+        setError("Category 'Books' not found");
+        return;
+      }
 
       const filterArgs: string[] = [];
 
@@ -263,10 +270,12 @@ const Catalog = () => {
         }
       });
 
-      const [minPrice, maxPrice] = priceRange;
-      const minCent = Math.round(minPrice * 100);
-      const maxCent = Math.round(maxPrice * 100);
-      filterArgs.push(`variants.price.centAmount:range(${minCent} to ${maxCent})`);
+      if (priceRange[0] !== priceLimits[0] || priceRange[1] !== priceLimits[1]) {
+        const [minPrice, maxPrice] = priceRange;
+        const minCent = Math.round(minPrice * 100);
+        const maxCent = Math.round(maxPrice * 100);
+        filterArgs.push(`variants.price.centAmount:range(${minCent} to ${maxCent})`);
+      }
 
       const sortMap: Record<string, string> = {
         "price-asc": "price asc",
@@ -285,7 +294,7 @@ const Catalog = () => {
         results.sort((a, b) => {
           const aAuthor = (a.masterVariant?.attributes?.find((attr) => attr.name === "author")?.value as string) || "";
           const bAuthor = (b.masterVariant?.attributes?.find((attr) => attr.name === "author")?.value as string) || "";
-          return sortOrder === "author-asc" ? aAuthor.localeCompare(bAuthor) : bAuthor.localeCompare(bAuthor);
+          return sortOrder === "author-asc" ? aAuthor.localeCompare(bAuthor) : bAuthor.localeCompare(aAuthor);
         });
       }
 
@@ -296,7 +305,8 @@ const Catalog = () => {
         setCurrentPage(1);
       }
     } catch (error) {
-      console.error("Error applying filters:", error);
+      console.error("Catalog: Error applying filters:", error);
+      setError("Failed to apply filters");
     } finally {
       setLoading(false);
     }
@@ -315,9 +325,7 @@ const Catalog = () => {
   };
 
   const handleAddToCart = async (productId: string, variantId: number, action: "add" | "increment" | "decrement") => {
-    if (isAdding) {
-      return;
-    }
+    if (isAdding) return;
 
     setIsAdding(true);
 
@@ -332,7 +340,6 @@ const Catalog = () => {
         }
         cart = await getOrCreateCustomerCart(accessToken);
         localStorage.setItem("cartId", cart.id);
-        localStorage.removeItem("anonymousCartId");
       } else {
         const anonymousCartId = localStorage.getItem("anonymousCartId");
         if (anonymousCartId) {

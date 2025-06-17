@@ -2,7 +2,9 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import { getAccessTokenByRefresh } from "../api/getAccessTokenByRefresh";
 import { useCookieManager } from "../hooks/useCookieManager";
 import { Customer } from "@commercetools/platform-sdk";
-import { deleteAnonymousCart } from "../utils/api";
+import { createApiBuilderFromCtpClient } from "@commercetools/platform-sdk";
+import { createExistingTokenClient } from "../utils/BuildClient";
+import { projectKey } from "../utils/api";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -43,15 +45,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      if (isInitializingRef.current) {
-        return;
-      }
+      if (isInitializingRef.current) return;
 
       isInitializingRef.current = true;
 
       try {
         const accessTokenCookie = cookies.access_token;
-        const refreshToken = cookies.refresh_token;
+        const refreshToken = cookies.refresh;
 
         const accessTokenExists = accessTokenCookie && !["", "null", "undefined"].includes(accessTokenCookie);
         const refreshTokenExists = refreshToken && !["", "null", "undefined"].includes(refreshToken);
@@ -81,14 +81,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (newAccessToken) {
           setAccessToken(newAccessToken);
           setIsLoggedIn(true);
-          const anonymousCartId = localStorage.getItem("anonymousCartId");
-          if (anonymousCartId) {
-            await deleteAnonymousCart(anonymousCartId);
-            localStorage.removeItem("anonymousCartId");
-          }
+
+          const customerClient = createExistingTokenClient(newAccessToken);
+          const apiRootCustomer = createApiBuilderFromCtpClient(customerClient).withProjectKey({ projectKey });
+
+          const customer = await apiRootCustomer
+            .me()
+            .get()
+            .execute()
+            .then((res) => res.body);
+          setCustomer(customer);
         }
       } catch (error) {
-        console.error("AuthContext: Error initializing auth:", error);
+        console.error("AuthContext.tsx: Error initializing auth:", error);
+        setTokens(null, null);
+        removeCookie("scope");
+        removeCookie("token_type");
+        setIsLoggedIn(false);
+        setCustomer(null);
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("cartId");
       } finally {
         isInitializingRef.current = false;
       }

@@ -3,7 +3,7 @@ import { useNavigate, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import "./LoginPage.css";
-import { loginUser, getOrCreateCustomerCart } from "../utils/api";
+import { loginUser, getOrCreateCustomerCart, mergeAnonymousCartToCustomerCart } from "../utils/api";
 
 interface ValidationErrors {
   email: string;
@@ -71,12 +71,15 @@ const LoginPage = () => {
         setIsLoggedIn(true);
         setCustomer(customer);
 
-        console.log("Testing getOrCreateCustomerCart with accessToken:", accessToken.substring(0, 10) + "...");
-        const cart = await getOrCreateCustomerCart(accessToken);
-        console.log("Test: Customer cart:", cart);
+        const anonymousCartId = localStorage.getItem("anonymousCartId");
+        let cart = await getOrCreateCustomerCart(accessToken, anonymousCartId || undefined);
+
+        if (anonymousCartId) {
+          cart = await mergeAnonymousCartToCustomerCart(anonymousCartId, cart.id, accessToken);
+          localStorage.removeItem("anonymousCartId");
+        }
 
         localStorage.setItem("cartId", cart.id);
-        localStorage.removeItem("anonymousCartId");
         setCart(cart);
 
         navigate("/main");
