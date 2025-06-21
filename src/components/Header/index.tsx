@@ -133,7 +133,10 @@ const Header = () => {
     <header className={styles.header}>
       <div className={styles.headerContent}>
         <NavLink to="/main" className={styles.logoLink}>
-          <img src="/assets/logo.png" alt="Shop Logo" className={styles.logo} />
+          <div className={styles.logoContainer}>
+            <img src="/assets/logo.png" alt="BookHaven Logo" className={styles.logo} />
+            <span className={styles.logoText}>Book Garden</span>
+          </div>
         </NavLink>
 
         <div className={styles.desktopNav}>{renderNavLinks()}</div>
