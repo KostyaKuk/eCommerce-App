@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
-import "./LoginPage.css";
-import { loginUser, getOrCreateCustomerCart, mergeAnonymousCartToCustomerCart } from "../utils/api";
+import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
+import "./loginPage.css";
+import { loginUser, getOrCreateCustomerCart, mergeAnonymousCartToCustomerCart } from "../../utils/api";
+import { validationMessages } from "./validationMessages";
 
 interface ValidationErrors {
   email: string;
@@ -28,21 +29,21 @@ const LoginPage = () => {
   }, [isLoggedIn, navigate]);
 
   const validateEmail = (value: string): string => {
-    if (!value) return "Email is required";
-    if (value.includes(" ")) return "Email must not contain spaces";
+    if (!value) return validationMessages.email.required;
+    if (value.includes(" ")) return validationMessages.email.noSpaces;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) return "Email must be properly formatted (e.g., user@example.com)";
+    if (!emailRegex.test(value)) return validationMessages.email.invalidFormat;
     return "";
   };
 
   const validatePassword = (value: string): string => {
     const trimmed = value.trim();
-    if (!trimmed) return "Password is required";
-    if (trimmed !== value) return "Password must not contain leading or trailing whitespace";
-    if (trimmed.length < 8) return "Password must be at least 8 characters long";
-    if (!/[A-Z]/.test(trimmed)) return "Password must contain at least one uppercase letter";
-    if (!/[a-z]/.test(trimmed)) return "Password must contain at least one lowercase letter";
-    if (!/[0-9]/.test(trimmed)) return "Password must contain at least one digit";
+    if (!trimmed) return validationMessages.password.required;
+    if (trimmed !== value) return validationMessages.password.noWhitespace;
+    if (trimmed.length < 8) return validationMessages.password.minLength;
+    if (!/[A-Z]/.test(trimmed)) return validationMessages.password.uppercase;
+    if (!/[a-z]/.test(trimmed)) return validationMessages.password.lowercase;
+    if (!/[0-9]/.test(trimmed)) return validationMessages.password.digit;
     return "";
   };
 

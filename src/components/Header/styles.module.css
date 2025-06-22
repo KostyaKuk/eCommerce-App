@@ -1,7 +1,7 @@
 @font-face {
   font-family: "Playwrite";
-  src: 
-    url('/assets/fonts/Playwrite-degrund.woff2') format('woff2'),
+  src:
+    url("/assets/fonts/Playwrite-degrund.woff2") format("woff2"),
     url("/assets/fonts/Playwrite-degrund.woff") format("woff"),
     url("/assets/fonts/Playwrite-degrund.ttf") format("truetype");
   font-weight: normal;
@@ -88,7 +88,7 @@
   .navButtons {
     flex-direction: column;
     gap: 5px;
-    margin-bottom: 15px;  
+    margin-bottom: 15px;
   }
 }
 
@@ -100,4 +100,3 @@
     font-size: 0.6rem;
   }
 }
-

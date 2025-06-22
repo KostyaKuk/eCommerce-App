@@ -3,7 +3,6 @@ module.exports = {
   testEnvironment: "jest-environment-jsdom",
   transform: {
     "^.+\\.tsx?$": "ts-jest",
-    // process `*.tsx` files with `ts-jest`
   },
   moduleNameMapper: {
     "\\.(gif|ttf|eot|svg|png)$": "<rootDir>/test/__ mocks __/fileMock.js",
@@ -12,7 +11,3 @@ module.exports = {
   globals: {},
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
 };
-
-// module.exports = {
-//   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-// };

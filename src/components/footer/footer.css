@@ -1,7 +1,7 @@
 @font-face {
   font-family: "Playwrite";
-  src: 
-    url('/fonts/Playwrite-degrund.woff2') format('woff2'),
+  src:
+    url("/fonts/Playwrite-degrund.woff2") format("woff2"),
     url("/fonts/Playwrite-degrund.woff") format("woff"),
     url("/fonts/Playwrite-degrund.ttf") format("truetype");
   font-weight: normal;
@@ -69,7 +69,6 @@
   .footer-container {
     padding: 0 12px;
   }
-
 
   .github-icon {
     width: 35px;

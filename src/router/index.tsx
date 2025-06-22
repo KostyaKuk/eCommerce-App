@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router";
 import App from "../App";
-import LoginPage from "../pages/LoginPage";
-import MainPage from "../pages/MainPage";
+import LoginPage from "../pages/loginPage/loginPage";
+import MainPage from "../pages/mainPage/mainPage";
 import Catalog from "../pages/Catalog/Catalog";
 import ProductPage from "../pages/ProductPage/ProductPage";
 import { RegisterPage } from "../pages/RegisterPage";
@@ -11,27 +11,28 @@ import Cart from "../pages/Cart/Cart";
 import { PublicRoute } from "./PublicRoute";
 import { PrivateRoute } from "./PrivateRoute";
 import AboutUs from "../pages/AboutUs";
+import { ROUTES } from "./routes";
 
 export const Router = () => {
   return (
     <Routes>
-      <Route path="/" element={<App />}>
-        <Route index element={<Navigate to="/main" replace />} />
-        <Route path="main" element={<MainPage />} />
+      <Route path={ROUTES.ROOT} element={<App />}>
+        <Route index element={<Navigate to={ROUTES.MAIN} replace />} />
+        <Route path={ROUTES.MAIN} element={<MainPage />} />
 
-        <Route path="catalog" element={<Catalog />} />
-        <Route path="products/:key" element={<ProductPage />} />
-        <Route path="/about-us" element={<AboutUs />} />
-        <Route path="cart" element={<Cart />} />
-        <Route element={<PublicRoute redirectTo="/" />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+        <Route path={ROUTES.CATALOG} element={<Catalog />} />
+        <Route path={ROUTES.PRODUCT} element={<ProductPage />} />
+        <Route path={ROUTES.ABOUT_US} element={<AboutUs />} />
+        <Route path={ROUTES.CART} element={<Cart />} />
+        <Route element={<PublicRoute redirectTo={ROUTES.REDIRECT_ROOT} />}>
+          <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+          <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
         </Route>
 
-        <Route element={<PrivateRoute redirectTo="/" />}>
-          <Route path="profile" element={<ProfilePage />} />
+        <Route element={<PrivateRoute redirectTo={ROUTES.REDIRECT_ROOT} />}>
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
