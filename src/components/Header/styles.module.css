@@ -1,0 +1,57 @@
+.header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 7px 0;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 64px;
+}
+
+.logo {
+  height: 40px;
+}
+
+.desktopNav {
+  display: flex;
+  gap: 1rem;
+}
+
+.linkDisabled {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (max-width: 899px) {
+  .desktopNav {
+    display: none;
+  }
+}
+
+.drawerPaper {
+  width: 250px;
+  padding: 16px;
+}
+
+.mobileMenuContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.mobileMenuContainer .MuiButton-root {
+  padding: 12px 24px;
+  margin: 6px 0;
+}
+
+.desktopNav .MuiButton-root {
+  padding: 8px 16px;
+}
