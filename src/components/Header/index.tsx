@@ -46,86 +46,168 @@ const Header = () => {
 
   const renderNavLinks = (isMobile = false) => (
     <>
-      <NavLink
-        to="/main"
-        end
-        className={({ isActive }) => (isActive ? styles.linkDisabled : "")}
-        onClick={isMobile ? closeMobileMenu : undefined}
-      >
-        <Button variant="contained" fullWidth sx={{ mb: 1 }}>
-          Home
-        </Button>
-      </NavLink>
-      <NavLink
-        to="/catalog"
-        className={({ isActive }) => (isActive ? styles.linkDisabled : "")}
-        onClick={isMobile ? closeMobileMenu : undefined}
-      >
-        <Button variant="contained" fullWidth sx={{ mb: 1 }}>
-          Catalog
-        </Button>
-      </NavLink>
-      <NavLink
-        to="/about-us"
-        className={({ isActive }) => (isActive ? styles.linkDisabled : "")}
-        onClick={isMobile ? closeMobileMenu : undefined}
-      >
-        <Button variant="contained" fullWidth sx={{ mb: 1 }}>
-          About Us
-        </Button>
-      </NavLink>
-      {!isLoggedIn ? (
-        <>
-          <NavLink
-            to="/login"
-            className={({ isActive }) => (isActive ? styles.linkDisabled : "")}
-            end
-            onClick={isMobile ? closeMobileMenu : undefined}
+      <div className={styles.navButtons}>
+        <NavLink
+          to="/main"
+          end
+          className={({ isActive }) => `${styles.navLink} ${isActive ? styles.linkDisabled : ""}`}
+          onClick={isMobile ? closeMobileMenu : undefined}
+        >
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{
+              mb: isMobile ? 1 : 0,
+              backgroundColor: "#4a06a9",
+              textTransform: "none",
+              transition: "background-color 0.3s ease",
+              "&:hover": {
+                backgroundColor: "#280057",
+              },
+            }}
           >
-            <Button variant="contained" fullWidth sx={{ mb: 1 }}>
-              Login
-            </Button>
-          </NavLink>
-          <NavLink
-            to="/register"
-            className={({ isActive }) => (isActive ? styles.linkDisabled : "")}
-            onClick={isMobile ? closeMobileMenu : undefined}
+            Home
+          </Button>
+        </NavLink>
+        <NavLink
+          to="/catalog"
+          className={({ isActive }) => `${styles.navLink} ${isActive ? styles.linkDisabled : ""}`}
+          onClick={isMobile ? closeMobileMenu : undefined}
+        >
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{
+              mb: isMobile ? 1 : 0,
+              backgroundColor: "#4a06a9",
+              textTransform: "none",
+              transition: "background-color 0.3s ease",
+              "&:hover": {
+                backgroundColor: "#280057",
+              },
+            }}
           >
-            <Button variant="contained" fullWidth>
-              Register
-            </Button>
-          </NavLink>
-        </>
-      ) : (
-        <>
-          <IconButton
-            aria-label="profile"
-            color="primary"
-            sx={{ display: "block", mx: "auto" }}
-            onClick={isMobile ? handleProfileClick : handleProfileClick}
+            Catalog
+          </Button>
+        </NavLink>
+        <NavLink
+          to="/about-us"
+          className={({ isActive }) => `${styles.navLink} ${isActive ? styles.linkDisabled : ""}`}
+          onClick={isMobile ? closeMobileMenu : undefined}
+        >
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{
+              mb: isMobile ? 1 : 0,
+              backgroundColor: "#4a06a9",
+              textTransform: "none",
+              transition: "background-color 0.3s ease",
+              "&:hover": {
+                backgroundColor: "#280057",
+              },
+            }}
           >
-            <PersonOutlineIcon />
-          </IconButton>
-          <IconButton
-            aria-label="logout"
-            color="primary"
-            onClick={isMobile ? handleLogout : handleLogout}
-            sx={{ display: "block", mx: "auto" }}
-          >
-            <LogoutIcon />
-          </IconButton>
-        </>
-      )}
-      <IconButton
-        aria-label="cart"
-        color="primary"
-        sx={{ display: "block", mx: "auto" }}
-        onClick={isMobile ? handleCartClick : handleCartClick}
-      >
-        <Badge badgeContent={totalLineItemQuantity} color="secondary">
-          <ShoppingCartIcon />
-        </Badge>
-      </IconButton>
+            About Us
+          </Button>
+        </NavLink>
+      </div>
+      <div className={`${styles.navIcons} ${isMobile ? styles.navIconsMobile : ""}`}>
+        {!isLoggedIn ? (
+          <>
+            <NavLink
+              to="/login"
+              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.linkDisabled : ""}`}
+              end
+              onClick={isMobile ? closeMobileMenu : undefined}
+            >
+              <Button
+                variant="contained"
+                fullWidth
+                sx={{
+                  mb: isMobile ? 1 : 0,
+                  backgroundColor: "#4a06a9",
+                  textTransform: "none",
+                  transition: "background-color 0.3s ease",
+                  "&:hover": {
+                    backgroundColor: "#280057",
+                  },
+                }}
+              >
+                Login
+              </Button>
+            </NavLink>
+            <NavLink
+              to="/register"
+              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.linkDisabled : ""}`}
+              onClick={isMobile ? closeMobileMenu : undefined}
+            >
+              <Button
+                variant="contained"
+                fullWidth
+                sx={{
+                  mb: isMobile ? 1 : 0,
+                  backgroundColor: "#4a06a9",
+                  textTransform: "none",
+                  transition: "background-color 0.3s ease",
+                  "&:hover": {
+                    backgroundColor: "#280057",
+                  },
+                }}
+              >
+                Register
+              </Button>
+            </NavLink>
+          </>
+        ) : (
+          <>
+            <IconButton
+              aria-label="profile"
+              color="primary"
+              sx={{
+                p: 0.5,
+                color: "#020202",
+                "&:hover": {
+                  backgroundColor: "rgba(74, 6, 169, 0.1)",
+                },
+              }}
+              onClick={isMobile ? handleProfileClick : handleProfileClick}
+            >
+              <PersonOutlineIcon sx={{ fontSize: 26 }} />
+            </IconButton>
+            <IconButton
+              aria-label="logout"
+              color="primary"
+              sx={{
+                p: 0.5,
+                color: "#020202",
+                "&:hover": {
+                  backgroundColor: "rgba(74, 6, 169, 0.1)",
+                },
+              }}
+              onClick={isMobile ? handleLogout : handleLogout}
+            >
+              <LogoutIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+          </>
+        )}
+        <IconButton
+          aria-label="cart"
+          color="primary"
+          sx={{
+            p: 0.5,
+            color: "#020202",
+            "&:hover": {
+              backgroundColor: "rgba(74, 6, 169, 0.1)",
+            },
+          }}
+          onClick={isMobile ? handleCartClick : handleCartClick}
+        >
+          <Badge badgeContent={totalLineItemQuantity} color="secondary" sx={{ fontSize: "8px" }}>
+            <ShoppingCartIcon sx={{ fontSize: 24 }} />
+          </Badge>
+        </IconButton>
+      </div>
     </>
   );
 
@@ -134,7 +216,7 @@ const Header = () => {
       <div className={styles.headerContent}>
         <NavLink to="/main" className={styles.logoLink}>
           <div className={styles.logoContainer}>
-            <img src="/assets/logo.png" alt="BookHaven Logo" className={styles.logo} />
+            <img src="/assets/logo.png" alt="Book Garden Logo" className={styles.logo} />
             <span className={styles.logoText}>Book Garden</span>
           </div>
         </NavLink>
@@ -145,12 +227,13 @@ const Header = () => {
           sx={{
             display: { xs: "flex", md: "none" },
             color: "inherit",
+            p: 0.5,
           }}
           aria-label="menu"
           edge="end"
           onClick={handleDrawerToggle}
         >
-          <MenuIcon />
+          <MenuIcon sx={{ fontSize: 32 }} />
         </IconButton>
 
         <Drawer anchor="right" open={mobileOpen} onClose={handleDrawerToggle}>

@@ -15,3 +15,6 @@ tsconfig.node.tsbuildinfo
 
 # vscode settings
 .vscode
+
+# dist
+dist

@@ -76,7 +76,8 @@ const AboutUs = () => {
 
       <div className="about-project-container">
         <p className="about-project-description">
-          Our school exam project began a month ago with a three-person team. Today, we're proud to introduce a cutting-edge book purchasing and global delivery platform.
+          Our school exam project began a month ago with a three-person team. Today, we're proud to introduce a
+          cutting-edge book purchasing and global delivery platform.
         </p>
         <a href="https://rs.school/" target="_blank" rel="noopener noreferrer" className="about-rss-link">
           <img src="/assets/rssLogo.svg" alt="RS School Logo" className="about-rss-logo" />

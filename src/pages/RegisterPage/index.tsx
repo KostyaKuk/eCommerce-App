@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import RegistrationForm from "../../components/RegistrationForm";
+import RegistrationForm from "../../components/footer/Footer";
 import styles from "./styles.module.css";
 
 export const RegisterPage = () => {
