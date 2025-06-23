@@ -229,13 +229,13 @@ const ProductPage: React.FC = () => {
                 padding: "10px",
                 fontWeight: 600,
                 color: "#ffffff",
-                backgroundColor: "#4a90e2",
+                backgroundColor: "#4a06a9",
                 borderRadius: "6px",
                 "&:hover": {
-                  backgroundColor: "#357abd",
+                  backgroundColor: "#280057",
                 },
                 "&:disabled": {
-                  backgroundColor: "#d0d0d0",
+                  backgroundColor: "#cccccc",
                   color: "#6b7280",
                 },
               }}
