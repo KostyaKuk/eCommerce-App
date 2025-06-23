@@ -4,9 +4,9 @@ import "./AboutUs.css";
 const AboutUs = () => {
   const developers = [
     {
-      name: "Eugeniusz Potapczuk",
+      name: "Eugeniy Potapchuk",
       role: "Frontend dev",
-      description: `Evgeniy is an enthusiastic developer with strong motivation.
+      description: `Eugeniy is an enthusiastic developer with strong motivation.
         Implemented the catalog page, authorization and basket!`,
       photo: "/assets/evgeniy.jpg",
       github: "https://github.com/squallerq",
@@ -79,9 +79,6 @@ const AboutUs = () => {
           Our school exam project began a month ago with a three-person team. Today, we're proud to introduce a
           cutting-edge book purchasing and global delivery platform.
         </p>
-        <a href="https://rs.school/" target="_blank" rel="noopener noreferrer" className="about-rss-link">
-          <img src="/assets/rssLogo.svg" alt="RS School Logo" className="about-rss-logo" />
-        </a>
       </div>
     </div>
   );

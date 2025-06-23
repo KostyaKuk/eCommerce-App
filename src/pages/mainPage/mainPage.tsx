@@ -9,7 +9,8 @@ const MainPage = () => {
         <h2>Main Page</h2>
         <div className="coupon-info">
           <p>
-            Use promo code <span className="coupon-code">SAVE10</span> at checkout to get a<strong>10% discount</strong>
+            Use promo code <span className="coupon-code">SAVE10</span> at checkout to get a
+            <strong> 10% discount </strong>
             on your order!
           </p>
         </div>
